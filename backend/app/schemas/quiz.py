@@ -169,3 +169,79 @@ class QuizResultResponse(BaseModel):
     started_at: datetime
     completed_at: Optional[datetime] = None
     concept_breakdown: List[ConceptResultBreakdown] = Field(default_factory=list)
+
+
+# ─────────────────────────────────────────────────────────────
+# Student-Facing Adaptive Quiz Assembly Models
+# ─────────────────────────────────────────────────────────────
+
+class AdaptiveQuizQuestionItem(BaseModel):
+    """Student-safe question item — no correct_answer, no internal scores."""
+    question_id: str
+    question: str
+    options: List[str]
+    concept: str
+
+
+class AdaptiveQuizResponse(BaseModel):
+    """Response for GET /student/courses/{course_id}/adaptive-quiz"""
+    quiz_session_id: str
+    course_id: str
+    course_name: str
+    total_questions: int
+    questions: List[AdaptiveQuizQuestionItem]
+
+
+class BulkAnswerItem(BaseModel):
+    """Single answer entry in a bulk submission."""
+    question_id: str = Field(..., description="ID of the question being answered")
+    selected_answer: str = Field(..., description="Student's selected option text")
+
+
+class BulkSubmitRequest(BaseModel):
+    """Request body for POST /student/courses/{course_id}/adaptive-quiz/submit"""
+    quiz_session_id: str = Field(..., description="Quiz session to submit answers for")
+    answers: List[BulkAnswerItem] = Field(..., description="List of answers", min_length=1)
+
+
+class QuestionResult(BaseModel):
+    """Per-question result revealed after submission."""
+    question_id: str
+    question: str
+    options: List[str]
+    selected_answer: str
+    correct_answer: str
+    is_correct: bool
+    concept: str
+    explanation: Optional[str] = None
+
+
+class ConceptPerformance(BaseModel):
+    """Per-concept accuracy breakdown in submission results."""
+    concept: str
+    total_questions: int
+    correct: int
+    wrong: int
+    accuracy_percentage: float
+
+
+class BulkSubmitResponse(BaseModel):
+    """Response for POST /student/courses/{course_id}/adaptive-quiz/submit"""
+    quiz_session_id: str
+    course_id: str
+    course_name: str
+    total_questions: int
+    correct_count: int
+    wrong_count: int
+    score_percentage: float
+    results: List[QuestionResult]
+    concept_performance: List[ConceptPerformance]
+
+
+class TeacherQuizInspectionResponse(BaseModel):
+    """Response for teacher inspection of a student's quiz results."""
+    student_id: str
+    course_id: str
+    course_name: str
+    sessions: List[Dict[str, Any]] = Field(default_factory=list)
+

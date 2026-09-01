@@ -18,7 +18,13 @@ from app.schemas.quiz import (
     QuizResultResponse,
     ConceptResultBreakdown,
     LearningSupport,
-    RevisionResource
+    RevisionResource,
+    AdaptiveQuizResponse,
+    AdaptiveQuizQuestionItem,
+    BulkSubmitRequest,
+    BulkSubmitResponse,
+    QuestionResult,
+    ConceptPerformance
 )
 from app.services.adapters.feature_service_adapter import FeatureServiceAdapter
 from app.services.adapters.ml_inference_service import ml_service
@@ -538,4 +544,232 @@ class AdaptiveQuizService:
             started_at=session.get("started_at", datetime.now(timezone.utc)),
             completed_at=session.get("completed_at"),
             concept_breakdown=breakdowns
+        )
+
+    @classmethod
+    async def generate_full_adaptive_quiz(
+        cls,
+        student_id: str,
+        course_id: str,
+        course_name: str
+    ) -> AdaptiveQuizResponse:
+        """
+        Generate a complete adaptive quiz according to fixed priority question counts.
+        """
+        clean_student = student_id.strip().upper()
+        
+        logger.info(
+            "[ADAPTIVE QUIZ] Generating full adaptive quiz for Student=%s, Course=%s",
+            clean_student, course_id
+        )
+
+        # 1. Feature Service: Retrieve concept features
+        concept_features_list = await FeatureServiceAdapter.get_concept_features(clean_student, course_id)
+
+        # 2. ML Inference: Concept priorities
+        priorities: List[ConceptPriority] = []
+        for cf in concept_features_list:
+            prediction = ml_service.predict(cf.features)
+            priorities.append(
+                ConceptPriority(
+                    concept_id=cf.concept_id,
+                    concept_name=cf.concept_name,
+                    priority=prediction.priority,
+                    score=prediction.score
+                )
+            )
+
+        # 3. Allocation based strictly on configuration (HIGH=5, MEDIUM=3, LOW=2)
+        quiz_questions: List[InternalQuizQuestion] = []
+        used_question_ids = []
+        current_diff = quiz_settings.INITIAL_DIFFICULTY
+
+        for p in priorities:
+            count = quiz_settings.PRIORITY_QUESTION_COUNTS.get(p.priority.value, 0)
+            if count <= 0:
+                continue
+
+            fetched = await QuestionBankAdapter.get_questions(
+                course_id=course_id,
+                concept_id=p.concept_id,
+                difficulty=current_diff,
+                count=count,
+                excluded_ids=used_question_ids
+            )
+            for q in fetched[:count]:
+                quiz_questions.append(q)
+                used_question_ids.append(q.question_id)
+                
+        actual_total = len(quiz_questions)
+
+        if not quiz_questions:
+            raise ValueError("No questions are currently available in the Question Bank for this course.")
+
+        # 4. Initialize persistent Session
+        session_id = str(uuid.uuid4())
+        now = datetime.now(timezone.utc)
+
+        session_doc = {
+            "quiz_session_id": session_id,
+            "quiz_type": "full_adaptive",
+            "student_id": clean_student,
+            "course_id": str(course_id),
+            "course_name": course_name,
+            "status": "active",
+            "started_at": now,
+            "completed_at": None,
+            "total_questions": actual_total,
+            "answered_questions": 0,
+            "correct_count": 0,
+            "wrong_count": 0,
+            "score": 0.0,
+            "concept_priorities": [p.model_dump() for p in priorities],
+            "questions": [q.model_dump() for q in quiz_questions],
+            "history": []
+        }
+
+        await QuizSessionRepository.create_session(session_doc)
+
+        # 5. Format Safe Questions
+        safe_items = []
+        for q in quiz_questions:
+            safe_items.append(
+                AdaptiveQuizQuestionItem(
+                    question_id=q.question_id,
+                    question=q.question_text,
+                    options=q.options,
+                    concept=q.concept_name
+                )
+            )
+
+        return AdaptiveQuizResponse(
+            quiz_session_id=session_id,
+            course_id=str(course_id),
+            course_name=course_name,
+            total_questions=actual_total,
+            questions=safe_items
+        )
+
+    @classmethod
+    async def submit_full_adaptive_quiz(
+        cls,
+        student_id: str,
+        course_id: str,
+        submission: BulkSubmitRequest
+    ) -> BulkSubmitResponse:
+        """
+        Validate and score all answers submitted at once.
+        """
+        clean_student = student_id.strip().upper()
+        session = await QuizSessionRepository.get_session(submission.quiz_session_id, clean_student)
+
+        if not session:
+            raise ValueError("Quiz session not found or access denied.")
+            
+        if session.get("course_id") != course_id:
+            raise ValueError("Quiz session does not match course ID.")
+
+        if session.get("status") != "active":
+            raise ValueError("Quiz already submitted.")
+
+        questions = session.get("questions", [])
+        total_questions = len(questions)
+
+        q_dict = {q["question_id"]: q for q in questions}
+        
+        correct_count = 0
+        wrong_count = 0
+        results = []
+        concept_stats = {}
+
+        # Evaluate
+        for ans_item in submission.answers:
+            q_id = ans_item.question_id
+            selected = ans_item.selected_answer.strip()
+            
+            target_q = q_dict.get(q_id)
+            if not target_q:
+                continue
+
+            c_name = target_q.get("concept_name", "General Concept")
+            if c_name not in concept_stats:
+                concept_stats[c_name] = {"total": 0, "correct": 0, "wrong": 0}
+
+            correct_ans = target_q.get("correct_answer", "").strip()
+            is_correct = (selected.lower() == correct_ans.lower())
+            
+            concept_stats[c_name]["total"] += 1
+
+            if is_correct:
+                correct_count += 1
+                concept_stats[c_name]["correct"] += 1
+            else:
+                wrong_count += 1
+                concept_stats[c_name]["wrong"] += 1
+                
+            explanation_text, _ = await ExplanationService.generate_explanation(
+                question_text=target_q.get("question_text", ""),
+                student_answer=selected,
+                correct_answer=correct_ans,
+                concept_name=c_name,
+                is_correct=is_correct,
+                existing_explanation=target_q.get("explanation")
+            )
+
+            results.append(
+                QuestionResult(
+                    question_id=q_id,
+                    question=target_q.get("question_text", ""),
+                    options=target_q.get("options", []),
+                    selected_answer=selected,
+                    correct_answer=correct_ans,
+                    is_correct=is_correct,
+                    concept=c_name,
+                    explanation=explanation_text or target_q.get("explanation")
+                )
+            )
+
+        score_pct = round((correct_count / total_questions * 100.0), 2) if total_questions > 0 else 0.0
+
+        # Construct ConceptPerformance
+        concept_perf_list = []
+        for c_name, stats in concept_stats.items():
+            tot = stats["total"]
+            corr = stats["correct"]
+            c_acc = round((corr / tot * 100.0), 2) if tot > 0 else 0.0
+            concept_perf_list.append(
+                ConceptPerformance(
+                    concept=c_name,
+                    total_questions=tot,
+                    correct=corr,
+                    wrong=stats["wrong"],
+                    accuracy_percentage=c_acc
+                )
+            )
+
+        # Update Session
+        now = datetime.now(timezone.utc)
+        await QuizSessionRepository.update_session(
+            quiz_session_id=submission.quiz_session_id,
+            student_id=clean_student,
+            update_dict={
+                "status": "completed",
+                "completed_at": now,
+                "answered_questions": len(submission.answers),
+                "correct_count": correct_count,
+                "wrong_count": wrong_count,
+                "score": score_pct
+            }
+        )
+
+        return BulkSubmitResponse(
+            quiz_session_id=submission.quiz_session_id,
+            course_id=course_id,
+            course_name=session.get("course_name", ""),
+            total_questions=total_questions,
+            correct_count=correct_count,
+            wrong_count=wrong_count,
+            score_percentage=score_pct,
+            results=results,
+            concept_performance=concept_perf_list
         )

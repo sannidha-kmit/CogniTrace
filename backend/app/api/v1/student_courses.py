@@ -6,6 +6,8 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from app.api.deps import require_role
 from app.db.mongodb import get_database
 from app.schemas.student import TeacherSubjectResponse, StudentCourseResponse
+from app.schemas.quiz import AdaptiveQuizResponse, BulkSubmitRequest, BulkSubmitResponse
+from app.services.adaptive_quiz_service import AdaptiveQuizService
 
 router = APIRouter()
 
@@ -200,3 +202,98 @@ async def get_course_details_for_student(
         year=course["year"],
         created_at=course["created_at"]
     )
+
+
+@router.get("/courses/{course_id}/adaptive-quiz", response_model=AdaptiveQuizResponse)
+async def get_adaptive_quiz(
+    course_id: str,
+    current_student: dict = Depends(require_role(["student"]))
+):
+    """
+    Generate a full adaptive quiz based on the student's telemetry predictions.
+    """
+    if not ObjectId.is_valid(course_id):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid course ID format."
+        )
+
+    database = await get_database()
+    course = await database.courses.find_one({"_id": ObjectId(course_id)})
+    if not course:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Course not found."
+        )
+
+    if course["year"] != current_student["year"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied. You are not authorized to access courses outside your academic year."
+        )
+
+    student_id = current_student["identifier"]
+    try:
+        return await AdaptiveQuizService.generate_full_adaptive_quiz(
+            student_id=student_id,
+            course_id=course_id,
+            course_name=course["course_name"]
+        )
+    except ValueError as err:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(err)
+        )
+    except Exception as err:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to generate adaptive quiz: {str(err)}"
+        )
+
+
+@router.post("/courses/{course_id}/adaptive-quiz/submit", response_model=BulkSubmitResponse)
+async def submit_adaptive_quiz(
+    course_id: str,
+    submission: BulkSubmitRequest,
+    current_student: dict = Depends(require_role(["student"]))
+):
+    """
+    Submit and evaluate a full adaptive quiz session.
+    """
+    if not ObjectId.is_valid(course_id):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid course ID format."
+        )
+
+    database = await get_database()
+    course = await database.courses.find_one({"_id": ObjectId(course_id)})
+    if not course:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Course not found."
+        )
+
+    if course["year"] != current_student["year"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied. You are not authorized to access courses outside your academic year."
+        )
+
+    student_id = current_student["identifier"]
+    try:
+        return await AdaptiveQuizService.submit_full_adaptive_quiz(
+            student_id=student_id,
+            course_id=course_id,
+            submission=submission
+        )
+    except ValueError as err:
+        msg = str(err)
+        if "not found" in msg.lower() or "access denied" in msg.lower():
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=msg)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=msg)
+    except Exception as err:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Answer submission failed: {str(err)}"
+        )

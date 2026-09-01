@@ -326,3 +326,13 @@ identifier after normalization: 'S24A002'
 detected role: 'student'
 collection being queried: 'users'
 whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'T24A001'
+detected role: 'teacher'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'S24A002'
+detected role: 'student'
+collection being queried: 'users'
+whether user was found: True

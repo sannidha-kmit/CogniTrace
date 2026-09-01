@@ -7,11 +7,20 @@ class QuizConfiguration(BaseModel):
     MIN_TOTAL_QUESTIONS: int = 3
     MAX_TOTAL_QUESTIONS: int = 30
 
-    # Question allocation weights for priorities
+    # Question allocation weights for priorities (used by existing /quiz/* endpoints)
     ALLOCATION_WEIGHTS: Dict[str, float] = {
         "HIGH": 0.5,
         "MEDIUM": 0.3,
         "LOW": 0.2
+    }
+
+    # Per-concept fixed question counts by ML priority level
+    # Used by the student-facing adaptive quiz assembly endpoint
+    # Change these values to adjust how many questions each priority level receives
+    PRIORITY_QUESTION_COUNTS: Dict[str, int] = {
+        "HIGH": 5,
+        "MEDIUM": 3,
+        "LOW": 2
     }
 
     # Thresholds for ML priority mapping (score: 0.0 - 1.0)
