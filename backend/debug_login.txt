@@ -1,0 +1,328 @@
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'T24A001'
+detected role: 'teacher'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'S24A001'
+detected role: 'student'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'T24A001'
+detected role: 'teacher'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'S999999'
+detected role: 'student'
+collection being queried: 'users'
+whether user was found: False
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'S24A001'
+detected role: 'student'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'T24A001'
+detected role: 'teacher'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'T24A001'
+detected role: 'teacher'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'T24A002'
+detected role: 'teacher'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'T24A003'
+detected role: 'teacher'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'T24A003'
+detected role: 'teacher'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'T24A003'
+detected role: 'teacher'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'PRIYA'
+detected role: 'None'
+collection being queried: 'users'
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'S24A003'
+detected role: 'student'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'T24A003'
+detected role: 'teacher'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'SHARU1'
+detected role: 'student'
+collection being queried: 'users'
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'S24A001'
+detected role: 'student'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'T24A001'
+detected role: 'teacher'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'T24A001'
+detected role: 'teacher'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'T24A001'
+detected role: 'teacher'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'S24A001'
+detected role: 'student'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'S24A001'
+detected role: 'student'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'S24A001'
+detected role: 'student'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'S24A001'
+detected role: 'student'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'S24A001'
+detected role: 'student'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'S24A001'
+detected role: 'student'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'S24A001'
+detected role: 'student'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'S24A001'
+detected role: 'student'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'S24A001'
+detected role: 'student'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'S24A001'
+detected role: 'student'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'S24A001'
+detected role: 'student'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'S24A001'
+detected role: 'student'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'S24A001'
+detected role: 'student'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'T24A001'
+detected role: 'teacher'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'S24A001'
+detected role: 'student'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'S24A001'
+detected role: 'student'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'T24A001'
+detected role: 'teacher'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'T24A001'
+detected role: 'teacher'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'T24A001'
+detected role: 'teacher'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'T24A001'
+detected role: 'teacher'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'T24A001'
+detected role: 'teacher'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'T24A001'
+detected role: 'teacher'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'S24A001'
+detected role: 'student'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'S24A001'
+detected role: 'student'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'S24A001'
+detected role: 'student'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'T24A001'
+detected role: 'teacher'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'S24A001'
+detected role: 'student'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'T24A001'
+detected role: 'teacher'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'S24A001'
+detected role: 'student'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'T24A001'
+detected role: 'teacher'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'S24A001'
+detected role: 'student'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'T24A001'
+detected role: 'teacher'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'S24A001'
+detected role: 'student'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'T24A001'
+detected role: 'teacher'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'S24A001'
+detected role: 'student'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'T24A001'
+detected role: 'teacher'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'S24A001'
+detected role: 'student'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'S24A002'
+detected role: 'student'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'T24A001'
+detected role: 'teacher'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'T24A002'
+detected role: 'teacher'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'S24A002'
+detected role: 'student'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'T24A002'
+detected role: 'teacher'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'S24A001'
+detected role: 'student'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'S24A002'
+detected role: 'student'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'S24A002'
+detected role: 'student'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'S24A001'
+detected role: 'student'
+collection being queried: 'users'
+whether user was found: True
+=== STEP 4 LOGIN DEBUG LOGGING ===
+identifier after normalization: 'S24A002'
+detected role: 'student'
+collection being queried: 'users'
+whether user was found: True
