@@ -7,6 +7,7 @@ from app.db.mongodb import get_database
 from app.schemas.student import InteractionEventResponse
 from app.schemas.mapping import ConceptEventMappingResponse
 from app.schemas.difficulty import DifficultyDatasetResponse
+from app.schemas.quiz import TeacherQuizInspectionResponse
 from app.services.mapping_service import MappingService
 from app.services.difficulty_service import DifficultyService
 from app.services.export_service import ExportService
@@ -383,7 +384,25 @@ async def export_student_interaction_dataset(
         "StudentID", "StudentName", "CourseSubject", "CourseName", 
         "EventType", "EventTimestamp", "EventDuration", "PlaybackSpeed", "PauseReason"
     ]
-    return ExportService.get_export_response(data, fieldnames, "interaction_telemetry", format.lower())
+    course_name = None
+    if course_id:
+        database = await get_database()
+        if ObjectId.is_valid(course_id):
+            c_doc = await database.courses.find_one({"_id": ObjectId(course_id)})
+            if c_doc:
+                course_name = c_doc.get("course_name")
+    if not course_name and data:
+        courses_in_data = set(d.get("CourseName") for d in data if d.get("CourseName"))
+        if len(courses_in_data) == 1:
+            course_name = list(courses_in_data)[0]
+
+    filename = ExportService.build_safe_filename(
+        student_id=roll_number,
+        course_name=course_name,
+        dataset_name="Interaction_Telemetry",
+        format_type=format.lower()
+    )
+    return ExportService.get_export_response(data, fieldnames, filename, format.lower())
 
 
 @router.get("/students/{roll_number}/concept-mappings/export")
@@ -405,7 +424,25 @@ async def export_student_concept_mappings(
         "StudentID", "StudentName", "CourseSubject", "CourseName", 
         "EventType", "EventTimestamp", "Transcript", "Concept", "Prerequisite"
     ]
-    return ExportService.get_export_response(data, fieldnames, "concept_event_mapping", format.lower())
+    course_name = None
+    if course_id:
+        database = await get_database()
+        if ObjectId.is_valid(course_id):
+            c_doc = await database.courses.find_one({"_id": ObjectId(course_id)})
+            if c_doc:
+                course_name = c_doc.get("course_name")
+    if not course_name and data:
+        courses_in_data = set(d.get("CourseName") for d in data if d.get("CourseName"))
+        if len(courses_in_data) == 1:
+            course_name = list(courses_in_data)[0]
+
+    filename = ExportService.build_safe_filename(
+        student_id=roll_number,
+        course_name=course_name,
+        dataset_name="Concept_Event_Mapping",
+        format_type=format.lower()
+    )
+    return ExportService.get_export_response(data, fieldnames, filename, format.lower())
 
 
 @router.get("/students/{roll_number}/difficulty/export")
@@ -428,4 +465,96 @@ async def export_student_difficulty(
         "ReplayCount", "PauseCount", "SeekBackwardCount", "SeekForwardCount", "UnderstandPauseCount",
         "DifficultyScore", "DifficultyLevel", "NeedsRevision"
     ]
-    return ExportService.get_export_response(data, fieldnames, "difficulty", format.lower())
+    course_name = None
+    if course_id:
+        database = await get_database()
+        if ObjectId.is_valid(course_id):
+            c_doc = await database.courses.find_one({"_id": ObjectId(course_id)})
+            if c_doc:
+                course_name = c_doc.get("course_name")
+    if not course_name and data:
+        courses_in_data = set(d.get("CourseName") for d in data if d.get("CourseName"))
+        if len(courses_in_data) == 1:
+            course_name = list(courses_in_data)[0]
+
+    filename = ExportService.build_safe_filename(
+        student_id=roll_number,
+        course_name=course_name,
+        dataset_name="Difficulty",
+        format_type=format.lower()
+    )
+    return ExportService.get_export_response(data, fieldnames, filename, format.lower())
+
+
+@router.get("/students/{roll_number}/quizzes", response_model=TeacherQuizInspectionResponse)
+async def get_student_quizzes_for_teacher(
+    roll_number: str,
+    course_id: Optional[str] = Query(None, description="Filter by Course ID"),
+    current_teacher: dict = Depends(require_role(["teacher"]))
+):
+    """
+    Teacher Inspection Endpoint:
+    Retrieve adaptive quiz sessions and performance analytics for a student.
+    Enforces strict teacher academic year, subject, and course authorization.
+    """
+    database = await get_database()
+    clean_roll = roll_number.strip().upper()
+    teacher_id = current_teacher["identifier"]
+    teacher_year = current_teacher["year"]
+    teacher_subject = current_teacher["subject"]
+
+    # 1. Verify student exists and belongs to teacher's academic year
+    student = await database.students.find_one({"roll_number": clean_roll})
+    if not student or student.get("year") != teacher_year:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied. Student does not belong to your authorized academic year."
+        )
+
+    # 2. Get teacher's courses
+    course_query = {
+        "teacher_id": teacher_id,
+        "year": teacher_year,
+        "subject": teacher_subject
+    }
+    if course_id and course_id.strip() and course_id != "ALL":
+        if not ObjectId.is_valid(course_id):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid course ID format."
+            )
+        course_query["_id"] = ObjectId(course_id)
+
+    teacher_courses = await database.courses.find(course_query).to_list(length=200)
+    if not teacher_courses:
+        return TeacherQuizInspectionResponse(
+            student_id=clean_roll,
+            course_id=course_id or "",
+            course_name="",
+            sessions=[]
+        )
+
+    teacher_course_ids = [str(c["_id"]) for c in teacher_courses]
+    primary_course = teacher_courses[0]
+
+    # 3. Query quiz sessions
+    sessions_cursor = database.quiz_sessions.find({
+        "student_id": clean_roll,
+        "course_id": {"$in": teacher_course_ids}
+    }).sort("started_at", -1)
+
+    raw_sessions = await sessions_cursor.to_list(length=100)
+    formatted_sessions = []
+    for s in raw_sessions:
+        s_dict = dict(s)
+        if "_id" in s_dict:
+            s_dict["_id"] = str(s_dict["_id"])
+        formatted_sessions.append(s_dict)
+
+    return TeacherQuizInspectionResponse(
+        student_id=clean_roll,
+        course_id=str(primary_course["_id"]),
+        course_name=primary_course.get("course_name", ""),
+        sessions=formatted_sessions
+    )
+

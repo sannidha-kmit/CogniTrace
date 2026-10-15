@@ -167,12 +167,6 @@ async def login(req: LoginRequest):
 
     # Validate identifier format
     role_type = determine_role_from_identifier(identifier)
-    
-    with open("debug_login.txt", "a") as f:
-        f.write("=== STEP 4 LOGIN DEBUG LOGGING ===\n")
-        f.write(f"identifier after normalization: '{identifier}'\n")
-        f.write(f"detected role: '{role_type}'\n")
-        f.write(f"collection being queried: 'users'\n")
 
     if not role_type:
         raise HTTPException(
@@ -182,9 +176,6 @@ async def login(req: LoginRequest):
 
     database = await get_database()
     user = await database.users.find_one({"identifier": identifier})
-    
-    with open("debug_login.txt", "a") as f:
-        f.write(f"whether user was found: {bool(user)}\n")
     
     if not user:
         raise HTTPException(

@@ -20,7 +20,7 @@ class QuizConfiguration(BaseModel):
     PRIORITY_QUESTION_COUNTS: Dict[str, int] = {
         "HIGH": 5,
         "MEDIUM": 3,
-        "LOW": 2
+        "LOW": 1
     }
 
     # Thresholds for ML priority mapping (score: 0.0 - 1.0)
@@ -31,12 +31,12 @@ class QuizConfiguration(BaseModel):
 
     # Strict feature ordering for Member 1 ML inference
     FEATURE_ORDER: List[str] = [
+        "backward_count",
         "replay_count",
-        "pause_count",
-        "seek_backward_count",
-        "seek_forward_count",
-        "understand_pause_count",
-        "difficulty_score"
+        "study_pause_count",
+        "other_work_pause_count",
+        "forward_count",
+        "speed_increase_count"
     ]
 
     # Difficulty transitions

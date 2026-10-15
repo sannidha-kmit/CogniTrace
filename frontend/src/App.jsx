@@ -11,6 +11,7 @@ import StudentDashboard from './pages/StudentDashboard';
 import StudentTeacherCourses from './pages/StudentTeacherCourses';
 import StudentCourseDetails from './pages/StudentCourseDetails';
 import StudentWatchVideo from './pages/StudentWatchVideo';
+import StudentAdaptiveQuiz from './pages/StudentAdaptiveQuiz';
 
 import TeacherDashboard from './pages/TeacherDashboard';
 import AddCourse from './pages/AddCourse';
@@ -21,6 +22,7 @@ import TeacherConceptView from './pages/TeacherConceptView';
 import TeacherStudentDatasetView from './pages/TeacherStudentDatasetView';
 import TeacherDatasetManagement from './pages/TeacherDatasetManagement';
 import TeacherDatasetDetail from './pages/TeacherDatasetDetail';
+import TeacherResearchAnalytics from './pages/TeacherResearchAnalytics';
 
 export default function App() {
   return (
@@ -68,6 +70,14 @@ export default function App() {
             </ProtectedRoute>
           } 
         />
+        <Route 
+          path="/student/course/:courseId/quiz" 
+          element={
+            <ProtectedRoute requiredRole="student">
+              <StudentAdaptiveQuiz />
+            </ProtectedRoute>
+          } 
+        />
 
         {/* Protected Teacher Routes */}
         <Route 
@@ -81,6 +91,14 @@ export default function App() {
         <Route 
           path="/teacher/home" 
           element={<Navigate to="/teacher/dashboard" replace />} 
+        />
+        <Route 
+          path="/teacher/research" 
+          element={
+            <ProtectedRoute requiredRole="teacher">
+              <TeacherResearchAnalytics />
+            </ProtectedRoute>
+          } 
         />
         <Route 
           path="/teacher/courses/add" 

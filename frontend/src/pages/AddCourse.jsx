@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { PlusCircle, ArrowLeft, AlertCircle, Video, CheckCircle2, ShieldCheck } from 'lucide-react';
+import { PlusCircle, ArrowLeft, AlertCircle, Video, CheckCircle2, ShieldCheck, PlaySquare } from 'lucide-react';
 
 export default function AddCourse() {
   const { user } = useAuth();
@@ -20,7 +20,7 @@ export default function AddCourse() {
     const cleanUrl = youtubeUrl.trim();
 
     if (!cleanName) {
-      setErrorMessage('Course Name is required.');
+      setErrorMessage('Course Title is required.');
       return;
     }
 
@@ -66,83 +66,86 @@ export default function AddCourse() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950">
-      <header className="border-b border-slate-800 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
+    <div className="min-h-screen flex flex-col bg-[#F9F9F9] text-[#0F0F0F]">
+      <header className="border-b border-[#E5E5E5] bg-[#FFFFFF] sticky top-0 z-50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <Link
-            to="/teacher/dashboard"
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-indigo-400 transition-colors"
+            to="/teacher/courses"
+            className="inline-flex items-center gap-2 text-sm font-medium text-[#606060] hover:text-[#0F0F0F] transition-colors"
           >
-            <ArrowLeft className="w-4 h-4" /> Back to Dashboard
+            <ArrowLeft className="w-4 h-4" /> Back to Content
           </Link>
-          <span className="text-xs font-mono text-slate-400 flex items-center gap-1">
-            <ShieldCheck className="w-3.5 h-3.5 text-indigo-400" /> Ownership: {user?.identifier}
+          <span className="text-xs font-medium px-3 py-1 bg-[#F2F2F2] text-[#606060] rounded-full flex items-center gap-1.5">
+            <ShieldCheck className="w-3.5 h-3.5 text-[#2E7D32]" /> {user?.identifier} ({user?.subject})
           </span>
         </div>
       </header>
 
-      <main className="flex-1 max-w-2xl w-full mx-auto px-4 py-12">
-        <div className="glass-panel p-8 rounded-2xl border border-slate-800 space-y-6">
-          <div>
-            <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2">
-              <PlusCircle className="w-6 h-6 text-indigo-400" /> Add New Course
-            </h2>
-            <p className="text-xs text-slate-400 mt-1">
-              Add a new course module with a single YouTube video URL for <strong className="text-white">{user?.year}</strong> ({user?.subject}).
-            </p>
+      <main className="flex-1 max-w-xl w-full mx-auto px-4 py-10">
+        <div className="bg-[#FFFFFF] border border-[#E5E5E5] rounded-xl p-6 sm:p-8 space-y-6 shadow-xs">
+          <div className="flex items-center gap-3 pb-4 border-b border-[#E5E5E5]">
+            <div className="w-10 h-10 rounded-full bg-[#F2F2F2] flex items-center justify-center text-[#0F0F0F] shrink-0">
+              <Video className="w-5 h-5" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-[#0F0F0F]">Upload Video Lecture</h1>
+              <p className="text-xs text-[#606060] mt-0.5">
+                Add an educational YouTube video for <span className="font-semibold text-[#0F0F0F]">{user?.year}</span> ({user?.subject})
+              </p>
+            </div>
           </div>
 
           {errorMessage && (
-            <div className="p-3 rounded-lg bg-rose-950/60 border border-rose-800/60 flex items-start gap-2.5 text-xs text-rose-300">
-              <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+            <div className="p-3.5 rounded-lg bg-[#FFEBEE] border border-[#FFCDD2] flex items-start gap-2.5 text-xs text-[#C62828]">
+              <AlertCircle className="w-4 h-4 text-[#C62828] shrink-0 mt-0.5" />
               <span>{errorMessage}</span>
             </div>
           )}
 
-          <form className="space-y-5" onSubmit={handleSubmit}>
+          <form className="space-y-4" onSubmit={handleSubmit}>
             <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1.5">Course Name</label>
+              <label className="block text-xs font-semibold text-[#0F0F0F] mb-1.5">Video Title</label>
               <input
                 type="text"
                 value={courseName}
                 onChange={(e) => setCourseName(e.target.value)}
-                placeholder="e.g. Binary Search Trees & Applications"
+                placeholder="e.g. Unit 3: Graph Traversal Algorithms & BFS/DFS"
                 disabled={isSubmitting}
-                className="w-full px-3.5 py-2.5 rounded-lg bg-slate-900/90 border border-slate-700 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all disabled:opacity-50"
+                className="w-full px-3.5 py-2.5 rounded-lg bg-[#FFFFFF] border border-[#CCCCCC] text-[#0F0F0F] placeholder-[#909090] text-sm focus:outline-none focus:border-[#0F0F0F] transition-colors disabled:opacity-50"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1.5">YouTube Video URL</label>
+              <label className="block text-xs font-semibold text-[#0F0F0F] mb-1.5">YouTube Video URL</label>
               <input
                 type="url"
                 value={youtubeUrl}
                 onChange={(e) => setYoutubeUrl(e.target.value)}
                 placeholder="https://www.youtube.com/watch?v=..."
                 disabled={isSubmitting}
-                className="w-full px-3.5 py-2.5 rounded-lg bg-slate-900/90 border border-slate-700 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all disabled:opacity-50 font-mono"
+                className="w-full px-3.5 py-2.5 rounded-lg bg-[#FFFFFF] border border-[#CCCCCC] text-[#0F0F0F] placeholder-[#909090] text-sm focus:outline-none focus:border-[#0F0F0F] transition-colors disabled:opacity-50 font-mono"
               />
-              <p className="text-[11px] text-slate-500 mt-1 flex items-center gap-1">
-                <Video className="w-3 h-3 text-cyan-400" /> Must be a single YouTube video watch link. Playlist links are excluded.
+              <p className="text-xs text-[#606060] mt-1.5 flex items-center gap-1.5">
+                <Video className="w-3.5 h-3.5 text-[#606060]" /> Accepts standard YouTube watch URLs and shortened youtu.be links.
               </p>
             </div>
 
-            <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-800/80 text-xs text-slate-400 space-y-1">
-              <span className="text-slate-300 font-semibold block">Automatic Backend Ownership Binding:</span>
-              <p>Year: <strong className="text-white">{user?.year}</strong> | Subject: <strong className="text-white">{user?.subject}</strong> | Created By: <strong className="text-white">{user?.name}</strong></p>
+            <div className="bg-[#F9F9F9] p-3.5 rounded-lg border border-[#E5E5E5] text-xs text-[#606060] space-y-1">
+              <span className="text-[#0F0F0F] font-semibold block">Metadata Binding:</span>
+              <p>Target Class: <strong className="text-[#0F0F0F]">{user?.year}</strong> | Subject: <strong className="text-[#0F0F0F]">{user?.subject}</strong> | Instructor: <strong className="text-[#0F0F0F]">{user?.name}</strong></p>
             </div>
 
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full flex justify-center items-center gap-2 py-3 px-4 rounded-xl text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all disabled:opacity-50 shadow-lg shadow-indigo-600/20"
+              className="w-full yt-btn-primary py-2.5 px-4 font-semibold flex justify-center items-center gap-2 text-sm mt-3"
             >
               {isSubmitting ? (
-                <span>Publishing Course...</span>
+                <span>Publishing Video...</span>
               ) : (
                 <>
                   <CheckCircle2 className="w-4 h-4" />
-                  <span>Add Course</span>
+                  <span>Publish Video Course</span>
                 </>
               )}
             </button>

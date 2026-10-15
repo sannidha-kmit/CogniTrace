@@ -1,18 +1,23 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧠</text></svg>" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2246%22 fill=%22%230F0F0F%22/><circle cx=%2250%22 cy=%2250%22 r=%2228%22 fill=%22none%22 stroke=%22%2300C896%22 stroke-width=%228%22 stroke-dasharray=%22120 40%22 stroke-linecap=%22round%22/><circle cx=%2250%22 cy=%2250%22 r=%2210%22 fill=%22%2300C896%22/></svg>" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CogniTrace - Learning Interaction Dataset Collection Platform</title>
-    <meta name="description" content="CogniTrace is a college-based learning interaction dataset collection platform capturing real student video watching behavior." />
-    <!-- Google Fonts -->
+    <title>CogniTrace - Learning Interaction Platform</title>
+    <meta name="description" content="CogniTrace is a college-based learning interaction platform capturing real student video watching behavior and adaptive assessments." />
+    <!-- Google Fonts: Roboto & JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;0,400;0,500;0,700;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   </head>
-  <body class="bg-slate-950 text-slate-100 antialiased font-sans min-h-screen">
+  <body class="bg-[#FFFFFF] text-[#0F0F0F] antialiased font-sans min-h-screen selection:bg-[#FF0000] selection:text-[#FFFFFF]">
     <div id="root"></div>
+    <!-- Lightweight in-browser face landmark model (Zero frame upload, 100% local) -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface@0.0.7/dist/blazeface.min.js"></script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
+
+

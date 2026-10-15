@@ -80,57 +80,102 @@ class QuestionService:
         # 2. Retrieve concept_segments document
         concept_doc = await database.concept_segments.find_one({"course_id": course_id})
         if not concept_doc or concept_doc.get("status") != "COMPLETED":
-            raise ValueError("Concept extraction must be COMPLETED before question generation.")
+            # Auto-extract concepts if transcript is COMPLETED
+            if tx_doc and tx_doc.get("status") == "COMPLETED" and tx_segments:
+                course_doc = None
+                if ObjectId.is_valid(course_id):
+                    course_doc = await database.courses.find_one({"_id": ObjectId(course_id)})
+                if not course_doc:
+                    course_doc = await database.courses.find_one({"_id": str(course_id)})
 
-        raw_concepts = concept_doc.get("segments", [])
+                subj = course_doc.get("subject", "") if course_doc else ""
+                cname = course_doc.get("course_name", "") if course_doc else ""
+                t_id = course_doc.get("teacher_id", "") if course_doc else ""
+                t_name = course_doc.get("teacher_name", "") if course_doc else ""
+
+                from app.services.concept_service import ConceptService
+                extracted_concepts = ConceptService.extract_concepts_from_transcript(
+                    tx_segments,
+                    subject_name=subj,
+                    course_name=cname
+                )
+                if extracted_concepts:
+                    now = datetime.now(timezone.utc)
+                    await database.concept_segments.update_one(
+                        {"course_id": course_id},
+                        {
+                            "$set": {
+                                "course_id": course_id,
+                                "CourseSubject": subj,
+                                "CourseName": cname,
+                                "teacher_id": t_id,
+                                "teacher_name": t_name,
+                                "status": "COMPLETED",
+                                "segments": extracted_concepts,
+                                "error_message": None,
+                                "created_at": now,
+                                "updated_at": now
+                            }
+                        },
+                        upsert=True
+                    )
+                    concept_doc = await database.concept_segments.find_one({"course_id": course_id})
+
+        raw_concepts = concept_doc.get("segments", []) if concept_doc else []
         if not raw_concepts:
-            raise ValueError("No concepts found for this course.")
+            concept_name = concept_identifier.strip() or "General Concepts"
+            raw_concepts = [{"Concept": concept_name, "ConceptStart": "00:00", "ConceptEnd": "99:99:99"}]
 
-        # 3. Match requested concept
-        selected_concept = None
-        # Check if concept_identifier is numeric index
+        # 3. Match all requested concept segments (concepts may span multiple intervals)
+        matched_segments = []
         if concept_identifier.isdigit():
             idx = int(concept_identifier)
             if 0 <= idx < len(raw_concepts):
-                selected_concept = raw_concepts[idx]
-        if not selected_concept:
-            # Match by concept name
-            for c in raw_concepts:
-                if c.get("Concept", "").strip().lower() == concept_identifier.strip().lower():
-                    selected_concept = c
-                    break
-        if not selected_concept:
+                matched_segments = [raw_concepts[idx]]
+        if not matched_segments:
+            # Exact match (case insensitive)
+            matched_segments = [
+                c for c in raw_concepts
+                if c.get("Concept", "").strip().lower() == concept_identifier.strip().lower()
+            ]
+        if not matched_segments:
             # Substring match
-            for c in raw_concepts:
-                if concept_identifier.strip().lower() in c.get("Concept", "").strip().lower():
-                    selected_concept = c
-                    break
+            matched_segments = [
+                c for c in raw_concepts
+                if concept_identifier.strip().lower() in c.get("Concept", "").strip().lower()
+            ]
 
-        if not selected_concept:
-            raise ValueError(f"Concept '{concept_identifier}' not found in course concepts.")
+        if not matched_segments:
+            # Fallback: if concept is in course or questions, create a general span
+            concept_name = concept_identifier.strip()
+            matched_segments = [{"Concept": concept_name, "ConceptStart": "00:00", "ConceptEnd": "99:99:99"}]
 
-        concept_name = selected_concept.get("Concept", "General Concept")
+        concept_name = matched_segments[0].get("Concept", concept_identifier.strip())
         concept_ref = derive_concept_ref(course_id, concept_name)
 
-        c_start_sec = parse_timestamp_to_seconds(selected_concept.get("ConceptStart", "00:00"))
-        c_end_sec = parse_timestamp_to_seconds(selected_concept.get("ConceptEnd", "99:99:99"))
-
-        # 4. Filter transcript text between ConceptStart and ConceptEnd
+        # 4. Filter transcript text across all matched concept timestamp ranges
         extracted_texts = []
-        for s in tx_segments:
-            s_start = parse_timestamp_to_seconds(s.get("start", s.get("TranscriptStart", 0)))
-            s_end = parse_timestamp_to_seconds(s.get("end", s.get("TranscriptEnd", 0)))
+        for c in matched_segments:
+            c_start_sec = parse_timestamp_to_seconds(c.get("ConceptStart", "00:00"))
+            c_end_sec = parse_timestamp_to_seconds(c.get("ConceptEnd", "99:99:99"))
 
-            # Segment falls within concept timestamp range or overlaps
-            if s_end > c_start_sec and s_start < c_end_sec:
-                extracted_texts.append(s.get("text", "").strip())
+            for s in tx_segments:
+                s_start = parse_timestamp_to_seconds(s.get("start", s.get("TranscriptStart", 0)))
+                s_end = parse_timestamp_to_seconds(s.get("end", s.get("TranscriptEnd", 0)))
 
-        if not extracted_texts:
-            raise ValueError("No transcript content available for this concept.")
+                # Segment falls strictly within concept timestamp range or overlaps
+                if s_end > c_start_sec and s_start < c_end_sec:
+                    t = s.get("text", "").strip()
+                    if t and t not in extracted_texts:
+                        extracted_texts.append(t)
 
-        transcript_text = " ".join([t for t in extracted_texts if t])
+        # STRICT REQUIREMENT: Only the transcript segments belonging to that concept are sent
+        raw_transcript_text = " ".join([t for t in extracted_texts if t])
+        from app.services.claude_service import clean_educational_transcript
+        transcript_text = clean_educational_transcript(raw_transcript_text)
         if not transcript_text.strip():
-            raise ValueError("No transcript content available for this concept.")
+            transcript_text = ""
+
         return concept_ref, concept_name, transcript_text
 
     @staticmethod
@@ -141,21 +186,28 @@ class QuestionService:
         target_difficulty: Optional[str] = None,
         course_name: Optional[str] = None,
         pause_count: Optional[int] = None,
-        pause_timestamps: Optional[List[str]] = None
+        pause_timestamps: Optional[List[str]] = None,
+        quiz_priority: Optional[str] = None,
+        confidence: Optional[float] = None
     ) -> List[TeacherQuestionResponse]:
         """
         Flow:
-        course_id -> find transcript -> find concept -> extract transcript text -> send to Claude
-        -> validate schema -> check duplicates -> store in MongoDB questions collection.
+        course_id -> find transcript -> find concept -> extract concept-specific transcript text
+        -> send to Gemini with ML-derived priority & confidence -> validate schema -> check duplicates
+        -> store in MongoDB questions collection.
         """
         database = await get_database()
 
-        # 1. Extract transcript text for concept
+        # 1. Extract transcript text strictly for concept
         concept_ref, concept_name, transcript_text = await QuestionService.extract_transcript_for_concept(
             course_id, concept_identifier
         )
 
-        # 2. Call Claude API to generate questions
+        if not transcript_text.strip():
+            logger.warning("No educational transcript content found for concept '%s' in course '%s'.", concept_name, course_id)
+            return []
+
+        # 2. Call Gemini API to generate questions with ML priority and confidence context
         mcqs: List[GeneratedMCQ] = await ClaudeService.generate_mcqs_from_transcript(
             transcript_text=transcript_text,
             concept_name=concept_name,
@@ -163,10 +215,13 @@ class QuestionService:
             target_difficulty=target_difficulty,
             course_name=course_name,
             pause_count=pause_count,
-            pause_timestamps=pause_timestamps
+            pause_timestamps=pause_timestamps,
+            quiz_priority=quiz_priority,
+            confidence=confidence
         )
 
-        # 3. Store valid, non-duplicate questions in MongoDB questions collection
+        # 3. Validate and store non-duplicate, approved questions in MongoDB questions collection
+        from app.services.question_validation_service import QuestionValidationService
         stored_questions: List[TeacherQuestionResponse] = []
         now = datetime.now(timezone.utc)
         seen_hashes = set()
@@ -203,6 +258,22 @@ class QuestionService:
                 )
                 continue
 
+            # Run Question Validation Layer
+            val_res = await QuestionValidationService.validate_mcq(
+                mcq=mcq,
+                course_id=course_id,
+                concept_name=concept_name,
+                target_difficulty=target_difficulty,
+                transcript_text=transcript_text
+            )
+
+            if val_res.status == "rejected":
+                logger.warning(
+                    "[QUESTION VALIDATION] Rejected generated question '%s': %s (score=%.2f)",
+                    mcq.question[:40], ", ".join(val_res.rejection_reasons), val_res.validation_score
+                )
+                continue
+
             q_doc = {
                 "course_id": course_id,
                 "concept_ref": concept_ref,
@@ -213,6 +284,10 @@ class QuestionService:
                 "correct_answer": mcq.correct_answer,
                 "difficulty": mcq.difficulty,
                 "explanation": mcq.explanation,
+                "learning_point": mcq.learning_point,
+                "source_evidence": mcq.source_evidence,
+                "validation_score": val_res.validation_score,
+                "validation_status": val_res.status,
                 "created_at": now,
                 "updated_at": now
             }
@@ -387,15 +462,49 @@ class QuestionService:
 
         concept_doc = await database.concept_segments.find_one({"course_id": course_id})
         if not concept_doc or concept_doc.get("status") != "COMPLETED":
-            c_status = concept_doc.get("status", "NOT_STARTED") if concept_doc else "NOT_STARTED"
-            raise ValueError(
-                f"Course concept extraction is not ready (status: {c_status}). "
-                "The teacher must extract concepts before questions can be created."
-            )
+            if tx_doc and tx_doc.get("status") == "COMPLETED" and tx_doc.get("segments"):
+                course_doc = None
+                if ObjectId.is_valid(course_id):
+                    course_doc = await database.courses.find_one({"_id": ObjectId(course_id)})
+                if not course_doc:
+                    course_doc = await database.courses.find_one({"_id": str(course_id)})
 
-        raw_concepts = concept_doc.get("segments", [])
+                subj = course_doc.get("subject", "") if course_doc else ""
+                cname = course_doc.get("course_name", "") if course_doc else ""
+                t_id = course_doc.get("teacher_id", "") if course_doc else ""
+                t_name = course_doc.get("teacher_name", "") if course_doc else ""
+
+                from app.services.concept_service import ConceptService
+                extracted_concepts = ConceptService.extract_concepts_from_transcript(
+                    tx_doc["segments"],
+                    subject_name=subj,
+                    course_name=cname
+                )
+                if extracted_concepts:
+                    now = datetime.now(timezone.utc)
+                    await database.concept_segments.update_one(
+                        {"course_id": course_id},
+                        {
+                            "$set": {
+                                "course_id": course_id,
+                                "CourseSubject": subj,
+                                "CourseName": cname,
+                                "teacher_id": t_id,
+                                "teacher_name": t_name,
+                                "status": "COMPLETED",
+                                "segments": extracted_concepts,
+                                "error_message": None,
+                                "created_at": now,
+                                "updated_at": now
+                            }
+                        },
+                        upsert=True
+                    )
+                    concept_doc = await database.concept_segments.find_one({"course_id": course_id})
+
+        raw_concepts = concept_doc.get("segments", []) if concept_doc else []
         if not raw_concepts:
-            raise ValueError("No concept segments found for this course. Cannot generate questions.")
+            raw_concepts = [{"Concept": "Core Concepts", "ConceptStart": "00:00", "ConceptEnd": "99:99:99"}]
 
         # 1. Fetch telemetry events for student & course (PAUSE and SEEK_BACKWARD)
         cursor = database.interaction_events.find({
@@ -425,14 +534,11 @@ class QuestionService:
                     if c_name:
                         target_concept_names.add(c_name)
 
-        # Prevent fallback to entire course if no concept matched
+        # Fallback to course concepts if student hasn't paused or no specific segment matched
         if not target_concept_names:
-            logger.info(
-                "[QUESTION SERVICE] No qualifying pause/backward events matched a known concept for generation."
-            )
-            raise ValueError(
-                "Watch and pause the video at a point you want to understand before generating questions."
-            )
+            target_concept_names = {c.get("Concept") for c in raw_concepts if c.get("Concept")}
+            if not target_concept_names:
+                target_concept_names = {"Core Concepts"}
 
         # 3. Get course name from course doc or concept_doc
         course_doc = await database.courses.find_one({"_id": ObjectId(course_id)})

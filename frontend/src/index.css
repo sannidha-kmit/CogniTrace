@@ -4,50 +4,422 @@
 
 @layer base {
   body {
-    @apply bg-slate-950 text-slate-100 antialiased font-sans selection:bg-cyan-500 selection:text-slate-950;
-    background-image: 
-      radial-gradient(at 0% 0%, rgba(14, 165, 233, 0.08) 0px, transparent 50%),
-      radial-gradient(at 100% 100%, rgba(99, 102, 241, 0.08) 0px, transparent 50%);
-    background-attachment: fixed;
+    @apply bg-[#FFFFFF] text-[#0F0F0F] antialiased font-sans selection:bg-[#FF0000] selection:text-[#FFFFFF];
+    background-color: #FFFFFF;
+    color: #0F0F0F;
+    font-family: 'Roboto', Arial, sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Roboto', Arial, sans-serif;
+    letter-spacing: -0.01em;
+    color: #0F0F0F;
   }
 }
 
-/* Glassmorphism Utilities */
-.glass-panel {
-  background: rgba(15, 23, 42, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+/* ─────────────────────────────────────────────────────────────
+   YouTube-Inspired Core Buttons
+   ───────────────────────────────────────────────────────────── */
+
+.yt-btn-primary {
+  background-color: #FF0000;
+  color: #FFFFFF;
+  font-weight: 600;
+  border-radius: 20px;
+  padding: 8px 18px;
+  font-size: 14px;
+  line-height: 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+  cursor: pointer;
 }
 
-.glass-card {
-  background: rgba(30, 41, 59, 0.5);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+.yt-btn-primary:hover {
+  background-color: #CC0000;
 }
 
-.glass-card:hover {
-  border-color: rgba(56, 189, 248, 0.3);
-  box-shadow: 0 8px 32px -8px rgba(14, 165, 233, 0.15);
+.yt-btn-primary:active {
+  transform: scale(0.98);
 }
 
-/* Custom Scrollbar */
+.yt-btn-primary:disabled {
+  background-color: #E5E5E5;
+  color: #AAAAAA;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.yt-btn-secondary {
+  background-color: #F2F2F2;
+  color: #0F0F0F;
+  font-weight: 500;
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-size: 14px;
+  line-height: 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid transparent;
+  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+  cursor: pointer;
+}
+
+.yt-btn-secondary:hover {
+  background-color: #E5E5E5;
+}
+
+.yt-btn-secondary:active {
+  transform: scale(0.98);
+}
+
+.yt-btn-text {
+  background-color: transparent;
+  color: #0F0F0F;
+  font-weight: 500;
+  border-radius: 20px;
+  padding: 8px 14px;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  transition: background-color 0.15s ease;
+  cursor: pointer;
+}
+
+.yt-btn-text:hover {
+  background-color: #F2F2F2;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   YouTube Cards, Panels & Search
+   ───────────────────────────────────────────────────────────── */
+
+.yt-card {
+  background-color: #FFFFFF;
+  border: 1px solid #E5E5E5;
+  border-radius: 12px;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.yt-card:hover {
+  border-color: #D4D4D4;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.yt-card-subtle {
+  background-color: #F9F9F9;
+  border: 1px solid #E5E5E5;
+  border-radius: 12px;
+}
+
+.yt-search-container {
+  display: flex;
+  align-items: center;
+  background: #FFFFFF;
+  border: 1px solid #CCCCCC;
+  border-radius: 24px;
+  overflow: hidden;
+  transition: border-color 0.2s ease;
+}
+
+.yt-search-container:focus-within {
+  border-color: #065FD4;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.yt-search-input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #0F0F0F;
+  padding: 8px 16px;
+  font-size: 14px;
+  width: 100%;
+}
+
+.yt-search-btn {
+  background-color: #F2F2F2;
+  border: none;
+  border-left: 1px solid #CCCCCC;
+  padding: 8px 20px;
+  color: #606060;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.yt-search-btn:hover {
+  background-color: #E5E5E5;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Form Elements (Inputs, Selects, Textareas)
+   ───────────────────────────────────────────────────────────── */
+
+.yt-input {
+  background-color: #FFFFFF;
+  border: 1px solid #CCCCCC;
+  color: #0F0F0F;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  width: 100%;
+}
+
+.yt-input:focus {
+  border-color: #0F0F0F;
+  box-shadow: 0 0 0 1px #0F0F0F;
+}
+
+.yt-input::placeholder {
+  color: #909090;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   YouTube Video Thumbnail Aspect & Hover
+   ───────────────────────────────────────────────────────────── */
+
+.yt-thumb {
+  aspect-ratio: 16 / 9;
+  border-radius: 10px;
+  object-fit: cover;
+  background-color: #F2F2F2;
+  transition: transform 0.2s ease;
+}
+
+.yt-thumb-wrapper:hover .yt-thumb {
+  transform: scale(1.02);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   YouTube Badges / Status Chips
+   ───────────────────────────────────────────────────────────── */
+
+.yt-chip {
+  background-color: #F2F2F2;
+  color: #0F0F0F;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.yt-chip:hover {
+  background-color: #E5E5E5;
+}
+
+.yt-chip.active {
+  background-color: #0F0F0F;
+  color: #FFFFFF;
+}
+
+.yt-badge-red {
+  background-color: #FF0000;
+  color: #FFFFFF;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.yt-badge-duration {
+  background-color: rgba(0, 0, 0, 0.8);
+  color: #FFFFFF;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+.yt-badge-green {
+  background-color: #E8F5E9;
+  color: #2E7D32;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.yt-badge-warning {
+  background-color: #FFF8E1;
+  color: #F57F17;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Backwards Compatibility Layer for Seamless Migration
+   ───────────────────────────────────────────────────────────── */
+
+.miami-panel {
+  background-color: #FFFFFF;
+  border: 1px solid #E5E5E5;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.miami-card {
+  background-color: #FFFFFF;
+  border: 1px solid #E5E5E5;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+}
+
+.miami-card:hover {
+  border-color: #D4D4D4;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.miami-card-interactive {
+  background-color: #FFFFFF;
+  border: 1px solid #E5E5E5;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+}
+
+.miami-card-interactive:hover {
+  border-color: #CCCCCC;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.btn-coral {
+  background-color: #FF0000;
+  color: #FFFFFF;
+  font-weight: 600;
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background-color 0.15s ease;
+}
+
+.btn-coral:hover {
+  background-color: #CC0000;
+}
+
+.btn-teal {
+  background-color: #F2F2F2;
+  color: #0F0F0F;
+  font-weight: 500;
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid #E5E5E5;
+  transition: background-color 0.15s ease;
+}
+
+.btn-teal:hover {
+  background-color: #E5E5E5;
+}
+
+.btn-mint {
+  background-color: #FFFFFF;
+  color: #0F0F0F;
+  font-weight: 500;
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid #CCCCCC;
+  transition: background-color 0.15s ease;
+}
+
+.btn-mint:hover {
+  background-color: #F2F2F2;
+}
+
+.pill-coral {
+  background-color: #FFEBEE;
+  color: #D32F2F;
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 12px;
+}
+
+.pill-mint {
+  background-color: #E8F5E9;
+  color: #2E7D32;
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 12px;
+}
+
+.pill-blush {
+  background-color: #F2F2F2;
+  color: #606060;
+  font-weight: 500;
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 12px;
+}
+
+.pill-teal {
+  background-color: #F2F2F2;
+  color: #0F0F0F;
+  font-weight: 500;
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 12px;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Clean Scrollbar
+   ───────────────────────────────────────────────────────────── */
+
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #090d16;
+  background: #FFFFFF;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1e293b;
+  background: #CCCCCC;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+  background: #909090;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

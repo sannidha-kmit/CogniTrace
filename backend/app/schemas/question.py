@@ -27,6 +27,8 @@ class GeneratedMCQ(BaseModel):
     difficulty: str = Field("MEDIUM", description="Difficulty level: EASY, MEDIUM, or HARD")
     explanation: str = Field(..., description="Detailed explanation based strictly on transcript content")
     concept: str = Field(..., description="The concept this question addresses")
+    learning_point: Optional[str] = Field(None, description="Specific learning point tested by the question")
+    source_evidence: Optional[str] = Field(None, description="Exact factual evidence from the concept transcript")
 
     @field_validator("options")
     @classmethod

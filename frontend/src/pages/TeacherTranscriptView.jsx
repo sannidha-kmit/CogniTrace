@@ -12,7 +12,8 @@ import {
   AlertTriangle, 
   Sparkles,
   Layers,
-  Download
+  Download,
+  PlaySquare
 } from 'lucide-react';
 
 export default function TeacherTranscriptView() {
@@ -170,7 +171,6 @@ export default function TeacherTranscriptView() {
     }
   };
 
-  // Format seconds helper for UI
   const formatTime = (secs) => {
     if (!secs || secs <= 0) return '00:00';
     const total = Math.round(secs);
@@ -215,7 +215,6 @@ export default function TeacherTranscriptView() {
     }
   };
 
-  // Filtered segments based on search query
   const filteredSegments = (transcript?.segments || []).filter(seg => 
     seg.text.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -224,57 +223,57 @@ export default function TeacherTranscriptView() {
   const currentProgress = statusInfo.progress || (currentStatus === 'COMPLETED' ? 100 : 0);
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950">
-      {/* Navbar */}
-      <header className="border-b border-slate-800 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
+    <div className="min-h-screen flex flex-col bg-[#F9F9F9] text-[#0F0F0F]">
+      {/* Header */}
+      <header className="border-b border-[#E5E5E5] bg-[#FFFFFF] sticky top-0 z-50">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <Link
             to="/teacher/courses"
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-indigo-400 transition-colors"
+            className="inline-flex items-center gap-2 text-sm font-medium text-[#606060] hover:text-[#0F0F0F] transition-colors"
           >
-            <ArrowLeft className="w-4 h-4" /> Back to My Courses
+            <ArrowLeft className="w-4 h-4" /> Back to Content
           </Link>
-          <span className="text-xs font-mono text-indigo-400 px-3 py-1 rounded-full bg-indigo-950/60 border border-indigo-800/50">
+          <span className="text-xs font-semibold px-3 py-1 bg-[#F2F2F2] text-[#606060] rounded-full font-mono">
             Teacher ID: {user?.identifier}
           </span>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 max-w-5xl w-full mx-auto px-4 py-8 space-y-6">
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
         
         {/* Header Panel */}
-        <div className="glass-panel p-6 sm:p-8 rounded-2xl border border-slate-800 space-y-4">
+        <div className="bg-[#FFFFFF] border border-[#E5E5E5] rounded-xl p-6 space-y-5 shadow-xs">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <span className="text-[10px] font-mono px-2.5 py-0.5 rounded bg-indigo-950 text-indigo-400 border border-indigo-800/50">
+              <span className="text-[11px] font-semibold px-2.5 py-0.5 bg-[#F2F2F2] text-[#0F0F0F] rounded-md">
                 {transcript?.subject || 'Subject'}
               </span>
-              <h2 className="text-2xl font-bold text-white tracking-tight mt-1">
-                {transcript?.course_name || 'Course Transcript'}
-              </h2>
-              <p className="text-xs text-slate-400 mt-1">
-                Teacher: <strong className="text-white">{transcript?.teacher_name || user?.name}</strong>
+              <h1 className="text-2xl font-bold text-[#0F0F0F] tracking-tight mt-2">
+                {transcript?.course_name || 'Course Video Transcript'}
+              </h1>
+              <p className="text-xs text-[#606060] mt-1">
+                Instructor: <span className="font-semibold text-[#0F0F0F]">{transcript?.teacher_name || user?.name}</span>
               </p>
             </div>
 
             {/* Status Badge */}
             <div className="flex items-center gap-3">
               {currentStatus === 'COMPLETED' ? (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-950/80 border border-emerald-500/40 text-emerald-400 text-xs font-mono">
-                  <CheckCircle2 className="w-4 h-4" /> Status: COMPLETED (100%)
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#E8F5E9] text-[#2E7D32] text-xs font-semibold">
+                  <CheckCircle2 className="w-4 h-4 text-[#2E7D32]" /> Status: Ready (100%)
                 </span>
               ) : isGenerating || currentStatus === 'PROCESSING' || currentStatus === 'PENDING' ? (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-950/80 border border-amber-500/40 text-amber-400 text-xs font-mono animate-pulse">
-                  <Clock className="w-4 h-4" /> Status: {statusInfo.stage || 'PROCESSING'} ({currentProgress}%)
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FFF8E1] text-[#F57F17] text-xs font-semibold animate-pulse">
+                  <Clock className="w-4 h-4 text-[#F57F17]" /> Status: {statusInfo.stage || 'PROCESSING'} ({currentProgress}%)
                 </span>
               ) : currentStatus === 'FAILED' ? (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-950/80 border border-rose-500/40 text-rose-400 text-xs font-mono">
-                  <AlertTriangle className="w-4 h-4" /> Status: FAILED
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FFEBEE] text-[#C62828] text-xs font-semibold">
+                  <AlertTriangle className="w-4 h-4 text-[#C62828]" /> Status: Failed
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-900 border border-slate-700 text-slate-400 text-xs font-mono">
-                  Status: NOT GENERATED
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#F2F2F2] text-[#606060] text-xs font-medium">
+                  Status: Not Generated
                 </span>
               )}
             </div>
@@ -284,29 +283,29 @@ export default function TeacherTranscriptView() {
           {currentStatus === 'NOT_GENERATED' && !isGenerating && (
             <button
               onClick={handleGenerate}
-              className="inline-flex items-center gap-2 py-2.5 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/20 transition-all"
+              className="yt-btn-primary text-xs py-2.5 px-5 font-semibold flex items-center gap-2"
             >
               <Sparkles className="w-4 h-4" />
-              <span>Generate Transcript with Faster-Whisper</span>
+              <span>Generate Timestamped Transcript with Faster-Whisper</span>
             </button>
           )}
 
           {currentStatus === 'COMPLETED' && (
-            <div className="flex flex-col sm:flex-row items-center gap-4">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-[#E5E5E5]">
               <Link
                 to={`/teacher/courses/${courseId}/concepts`}
-                className="inline-flex items-center gap-2 py-2.5 px-4 rounded-xl bg-cyan-950 hover:bg-cyan-900 border border-cyan-800/60 text-cyan-300 font-bold text-xs transition-colors"
+                className="yt-btn-secondary text-xs py-2 px-3.5 font-semibold flex items-center gap-2"
               >
-                <Layers className="w-4 h-4 text-cyan-400" />
-                <span>View Course Concepts</span>
+                <Layers className="w-4 h-4 text-[#FF0000]" />
+                <span>View Derived Concepts</span>
               </Link>
 
               {/* Export Controls */}
-              <div className="flex items-center gap-2 ml-auto">
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Export Transcript:</span>
-                <button onClick={() => handleExport("csv")} className="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800 transition-colors flex items-center gap-1.5"><Download className="w-3.5 h-3.5"/> CSV</button>
-                <button onClick={() => handleExport("json")} className="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800 transition-colors flex items-center gap-1.5"><Download className="w-3.5 h-3.5"/> JSON</button>
-                <button onClick={() => handleExport("xlsx")} className="px-3 py-1.5 rounded-lg bg-indigo-900/60 border border-indigo-700 text-xs font-semibold text-indigo-200 hover:text-white hover:bg-indigo-800 transition-colors flex items-center gap-1.5"><Download className="w-3.5 h-3.5"/> Excel</button>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-semibold text-[#606060] uppercase tracking-wider">Export:</span>
+                <button onClick={() => handleExport("csv")} className="yt-btn-secondary py-1.5 px-3 text-xs font-semibold flex items-center gap-1.5"><Download className="w-3.5 h-3.5 text-[#606060]"/> CSV</button>
+                <button onClick={() => handleExport("json")} className="yt-btn-secondary py-1.5 px-3 text-xs font-semibold flex items-center gap-1.5"><Download className="w-3.5 h-3.5 text-[#606060]"/> JSON</button>
+                <button onClick={() => handleExport("xlsx")} className="yt-btn-primary py-1.5 px-3 text-xs font-semibold flex items-center gap-1.5"><Download className="w-3.5 h-3.5"/> Excel</button>
               </div>
             </div>
           )}
@@ -314,7 +313,7 @@ export default function TeacherTranscriptView() {
           {currentStatus === 'FAILED' && (
             <button
               onClick={handleRegenerate}
-              className="inline-flex items-center gap-2 py-2 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition-colors"
+              className="yt-btn-primary text-xs py-2.5 px-5 font-semibold flex items-center gap-2"
             >
               <RotateCw className="w-4 h-4" />
               <span>Retry Transcript Generation</span>
@@ -324,60 +323,60 @@ export default function TeacherTranscriptView() {
 
         {/* Error message display */}
         {errorMessage && (
-          <div className="p-4 rounded-xl bg-rose-950/60 border border-rose-800/60 flex items-start gap-2.5 text-xs text-rose-300">
-            <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+          <div className="p-4 rounded-xl bg-[#FFEBEE] border border-[#FFCDD2] flex items-start gap-2.5 text-xs text-[#C62828]">
+            <AlertTriangle className="w-4 h-4 text-[#C62828] shrink-0 mt-0.5" />
             <span>{errorMessage}</span>
           </div>
         )}
 
         {/* Failed details display */}
         {currentStatus === 'FAILED' && statusInfo.error_message && (
-          <div className="p-4 rounded-xl bg-rose-950/40 border border-rose-900/60 text-xs text-rose-300 space-y-1">
-            <strong>Error Details:</strong>
-            <p className="font-mono text-[11px] text-rose-400">{statusInfo.error_message}</p>
+          <div className="p-4 rounded-xl bg-[#FFEBEE] border border-[#FFCDD2] text-xs text-[#C62828] space-y-1">
+            <strong className="text-[#0F0F0F]">Error Details:</strong>
+            <p className="font-mono text-xs">{statusInfo.error_message}</p>
           </div>
         )}
 
         {/* Real-Time Progress Bar Display */}
         {(isGenerating || currentStatus === 'PROCESSING' || currentStatus === 'PENDING') && (
-          <div className="p-6 sm:p-8 glass-panel rounded-2xl border border-slate-800 space-y-5">
+          <div className="p-6 bg-[#FFFFFF] border border-[#E5E5E5] rounded-xl space-y-4 shadow-xs">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-amber-950/60 border border-amber-800/50 flex items-center justify-center text-amber-400 animate-spin">
-                  <RotateCw className="w-5 h-5" />
+              <div className="flex items-center gap-3.5">
+                <div className="w-9 h-9 rounded-full bg-[#FF0000]/10 flex items-center justify-center text-[#FF0000] animate-spin">
+                  <RotateCw className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-white tracking-wide">
-                    {statusInfo.stage === 'DOWNLOADING' ? 'Downloading Video Audio Stream...' :
-                     statusInfo.stage === 'EXTRACTING_AUDIO' ? 'Extracting Audio File...' :
-                     statusInfo.stage === 'TRANSCRIBING' ? 'Transcribing Audio with Faster-Whisper...' :
-                     statusInfo.stage === 'SAVING' ? 'Saving Timestamped Transcript...' :
-                     'Queued for Background Processing...'}
+                  <h3 className="text-sm font-semibold text-[#0F0F0F]">
+                    {statusInfo.stage === 'DOWNLOADING' ? 'Downloading YouTube Audio Stream...' :
+                     statusInfo.stage === 'EXTRACTING_AUDIO' ? 'Extracting Audio Track...' :
+                     statusInfo.stage === 'TRANSCRIBING' ? 'Transcribing with Faster-Whisper Model...' :
+                     statusInfo.stage === 'SAVING' ? 'Saving Timestamped Segments...' :
+                     'Queued for Background Worker...'}
                   </h3>
-                  <p className="text-xs text-slate-400 font-mono mt-0.5">
-                    {statusInfo.message || 'Processing in background worker...'}
+                  <p className="text-xs text-[#606060] mt-0.5">
+                    {statusInfo.message || 'Processing video stream in background worker...'}
                   </p>
                 </div>
               </div>
 
-              <span className="text-xl font-bold font-mono text-amber-400 bg-amber-950/60 px-3.5 py-1.5 rounded-xl border border-amber-800/50">
+              <span className="text-sm font-bold font-mono text-[#FF0000] px-3 py-1 bg-[#FF0000]/10 rounded-full">
                 {currentProgress}%
               </span>
             </div>
 
-            {/* Visual Progress Bar */}
-            <div className="w-full bg-slate-900 rounded-full h-3 overflow-hidden border border-slate-800 p-0.5">
+            {/* Visual YouTube Red Progress Bar */}
+            <div className="w-full bg-[#E5E5E5] rounded-full h-2 overflow-hidden">
               <div 
-                className="bg-gradient-to-r from-amber-500 to-indigo-500 h-full rounded-full transition-all duration-500 ease-out"
+                className="bg-[#FF0000] h-full rounded-full transition-all duration-500 ease-out"
                 style={{ width: `${currentProgress}%` }}
               />
             </div>
 
             {/* Audio Duration Sub-details */}
             {statusInfo.total_duration_seconds > 0 && (
-              <div className="flex items-center justify-between text-xs font-mono text-slate-400 pt-1 border-t border-slate-800/60">
+              <div className="flex items-center justify-between text-xs font-mono text-[#606060] pt-1 border-t border-[#E5E5E5]">
                 <span>Processed: {formatTime(statusInfo.processed_seconds)} / {formatTime(statusInfo.total_duration_seconds)}</span>
-                <span>Stage: {statusInfo.stage}</span>
+                <span className="font-semibold text-[#0F0F0F]">Stage: {statusInfo.stage}</span>
               </div>
             )}
           </div>
@@ -385,32 +384,32 @@ export default function TeacherTranscriptView() {
 
         {/* Completed Transcript View */}
         {currentStatus === 'COMPLETED' && transcript && (
-          <div className="space-y-6">
+          <div className="space-y-4">
             
             {/* Transcript Search Bar */}
-            <div className="glass-panel p-4 rounded-2xl border border-slate-800 space-y-3">
+            <div className="bg-[#FFFFFF] border border-[#E5E5E5] p-4 rounded-xl space-y-3 shadow-xs">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                  <Search className="w-4 h-4 text-indigo-400" /> Search Transcript
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-[#606060] flex items-center gap-2">
+                  <Search className="w-3.5 h-3.5 text-[#0F0F0F]" /> Search Transcript
                 </h3>
-                <span className="text-[11px] font-mono text-slate-400">
-                  {filteredSegments.length} of {transcript.segments.length} segment(s)
+                <span className="text-xs font-semibold px-2.5 py-0.5 bg-[#F2F2F2] text-[#606060] rounded-full">
+                  {filteredSegments.length} of {transcript.segments.length} segments
                 </span>
               </div>
 
               <div className="relative flex items-center">
-                <Search className="w-4 h-4 text-slate-500 absolute left-3.5" />
+                <Search className="w-4 h-4 text-[#909090] absolute left-3.5" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search transcript text (e.g. process, memory, array)..."
-                  className="w-full pl-10 pr-9 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white placeholder-slate-500 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="Search transcript text (e.g. algorithm, memory, binary)..."
+                  className="w-full pl-10 pr-9 py-2 rounded-lg bg-[#FFFFFF] border border-[#CCCCCC] text-[#0F0F0F] placeholder-[#909090] text-xs focus:outline-none focus:border-[#0F0F0F]"
                 />
                 {searchQuery && (
                   <button
                     onClick={() => setSearchQuery('')}
-                    className="absolute right-3 p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white"
+                    className="absolute right-3 p-1 rounded hover:bg-[#F2F2F2] text-[#606060] hover:text-[#0F0F0F] cursor-pointer"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -419,18 +418,18 @@ export default function TeacherTranscriptView() {
             </div>
 
             {/* Timestamped Segment List */}
-            <div className="glass-panel p-6 rounded-2xl border border-slate-800 space-y-3 max-h-[600px] overflow-y-auto custom-scrollbar">
+            <div className="bg-[#FFFFFF] border border-[#E5E5E5] p-4 sm:p-5 rounded-xl space-y-2.5 max-h-[600px] overflow-y-auto custom-scrollbar shadow-xs">
               {filteredSegments.length === 0 ? (
-                <div className="py-8 text-center text-xs font-mono text-slate-400">
+                <div className="py-8 text-center text-xs text-[#606060]">
                   No matching transcript segments found.
                 </div>
               ) : (
                 filteredSegments.map((seg, idx) => (
-                  <div key={idx} className="p-4 rounded-xl bg-slate-900/60 border border-slate-800/80 hover:border-indigo-500/40 transition-colors flex flex-col sm:flex-row items-start gap-3">
-                    <span className="text-xs font-mono text-indigo-400 bg-indigo-950/60 px-2.5 py-1 rounded border border-indigo-800/50 shrink-0">
+                  <div key={idx} className="p-3.5 rounded-lg bg-[#F9F9F9] border border-[#E5E5E5] hover:bg-[#F2F2F2] transition-colors flex flex-col sm:flex-row items-start gap-3">
+                    <span className="text-xs font-mono font-semibold px-2.5 py-1 rounded bg-[#FFFFFF] border border-[#E5E5E5] text-[#0F0F0F] shrink-0">
                       {seg.TranscriptStart} - {seg.TranscriptEnd}
                     </span>
-                    <p className="text-xs text-slate-200 leading-relaxed pt-0.5">
+                    <p className="text-sm text-[#0F0F0F] leading-relaxed pt-0.5">
                       {seg.text}
                     </p>
                   </div>

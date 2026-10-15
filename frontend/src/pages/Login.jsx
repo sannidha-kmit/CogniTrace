@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Activity, LogIn, AlertCircle, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Play, LogIn, AlertCircle, ArrowRight, ShieldCheck, GraduationCap, School } from 'lucide-react';
 
 export default function Login() {
   const [identifier, setIdentifier] = useState('');
@@ -40,42 +40,39 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
-      {/* Glow Effects */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
-
-      <div className="sm:mx-auto sm:w-full sm:max-w-md space-y-4">
-        <div className="flex justify-center">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-500 to-indigo-600 flex items-center justify-center shadow-xl shadow-cyan-500/20">
-            <Activity className="w-7 h-7 text-white" />
+    <div className="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 bg-[#F9F9F9]">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md space-y-3">
+        <div className="flex items-center justify-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-[#0F0F0F] flex items-center justify-center shadow-xs">
+            <span className="font-bold text-sm text-[#00C896]">CT</span>
           </div>
+          <span className="text-2xl font-bold text-[#0F0F0F] tracking-tight">CogniTrace</span>
         </div>
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-white tracking-tight">CogniTrace Platform</h2>
-          <p className="mt-1 text-xs text-slate-400">Educational Learning Interaction Dataset Collection</p>
-        </div>
+        <p className="text-center text-sm text-[#606060]">
+          Adaptive Video Learning & Assessment Platform
+        </p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="glass-panel py-8 px-6 shadow-2xl rounded-2xl sm:px-10 border border-slate-800">
+      <div className="mt-6 sm:mx-auto sm:w-full sm:max-w-md px-4 sm:px-0">
+        <div className="bg-[#FFFFFF] border border-[#E5E5E5] rounded-xl py-8 px-6 sm:px-8 shadow-sm">
           
-          <div className="mb-6 pb-4 border-b border-slate-800/80 flex items-center justify-between">
-            <span className="text-sm font-semibold text-slate-200">Account Login</span>
-            <span className="inline-flex items-center gap-1 text-[11px] font-mono px-2 py-0.5 rounded bg-slate-900 text-slate-400 border border-slate-800">
-              <ShieldCheck className="w-3 h-3 text-cyan-400" /> Auto Role Detection
+          <div className="mb-6 pb-3 border-b border-[#E5E5E5] flex items-center justify-between">
+            <h1 className="text-lg font-semibold text-[#0F0F0F]">Sign In</h1>
+            <span className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 bg-[#F2F2F2] text-[#606060] rounded-full">
+              <ShieldCheck className="w-3.5 h-3.5 text-[#0F0F0F]" /> Auto Role
             </span>
           </div>
 
           {errorMessage && (
-            <div className="mb-5 p-3 rounded-lg bg-rose-950/60 border border-rose-800/60 flex items-start gap-2.5 text-xs text-rose-300">
-              <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+            <div className="mb-5 p-3 rounded-lg bg-[#FFEBEE] border border-[#FFCDD2] flex items-start gap-2.5 text-xs font-medium text-[#C62828]">
+              <AlertCircle className="w-4 h-4 text-[#C62828] shrink-0 mt-0.5" />
               <span>{errorMessage}</span>
             </div>
           )}
 
-          <form className="space-y-5" onSubmit={handleSubmit}>
+          <form className="space-y-4" onSubmit={handleSubmit}>
             <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1.5">
+              <label className="block text-xs font-semibold text-[#0F0F0F] mb-1.5 uppercase tracking-wide">
                 Roll Number / Teacher ID
               </label>
               <input
@@ -84,12 +81,12 @@ export default function Login() {
                 onChange={(e) => setIdentifier(e.target.value)}
                 placeholder="e.g. S24A001 or T24A001"
                 disabled={isSubmitting}
-                className="w-full px-3.5 py-2.5 rounded-lg bg-slate-900/90 border border-slate-700 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all disabled:opacity-50 font-mono uppercase"
+                className="w-full px-3.5 py-2.5 rounded-lg bg-[#FFFFFF] border border-[#CCCCCC] text-[#0F0F0F] placeholder-[#909090] text-sm focus:outline-none focus:border-[#0F0F0F] focus:ring-1 focus:ring-[#0F0F0F] transition-all font-mono uppercase"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1.5">
+              <label className="block text-xs font-semibold text-[#0F0F0F] mb-1.5 uppercase tracking-wide">
                 Password
               </label>
               <input
@@ -98,42 +95,48 @@ export default function Login() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 disabled={isSubmitting}
-                className="w-full px-3.5 py-2.5 rounded-lg bg-slate-900/90 border border-slate-700 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all disabled:opacity-50"
+                className="w-full px-3.5 py-2.5 rounded-lg bg-[#FFFFFF] border border-[#CCCCCC] text-[#0F0F0F] placeholder-[#909090] text-sm focus:outline-none focus:border-[#0F0F0F] focus:ring-1 focus:ring-[#0F0F0F] transition-all"
               />
             </div>
 
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full flex justify-center items-center gap-2 py-2.5 px-4 rounded-lg text-sm font-semibold text-slate-950 bg-cyan-400 hover:bg-cyan-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 transition-all disabled:opacity-50 shadow-lg shadow-cyan-500/20"
+              className="w-full bg-[#FF0000] hover:bg-[#CC0000] text-white font-semibold rounded-full py-2.5 text-sm transition-colors duration-150 inline-flex items-center justify-center gap-2 cursor-pointer shadow-sm active:scale-98 mt-2 disabled:bg-[#E5E5E5] disabled:text-[#AAAAAA]"
             >
               {isSubmitting ? (
                 <span>Authenticating...</span>
               ) : (
                 <>
                   <LogIn className="w-4 h-4" />
-                  <span>Login</span>
+                  <span>Sign In</span>
                 </>
               )}
             </button>
           </form>
 
-          <div className="mt-8 pt-6 border-t border-slate-800/80 space-y-3">
-            <p className="text-xs text-slate-400 text-center">New to CogniTrace? Register below:</p>
-            <div className="grid grid-cols-2 gap-3 text-xs font-medium">
+          <div className="mt-7 pt-5 border-t border-[#E5E5E5] space-y-3">
+            <p className="text-xs text-[#606060] text-center font-medium">New to CogniTrace? Select your role to register:</p>
+            <div className="grid grid-cols-2 gap-3 text-xs">
               <Link
                 to="/register/student"
-                className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 transition-colors text-center"
+                className="group flex items-center justify-between px-3.5 py-2.5 rounded-lg bg-[#F9F9F9] hover:bg-[#F2F2F2] border border-[#E5E5E5] text-[#0F0F0F] text-xs font-medium transition-colors"
               >
-                <span>Create Student Account</span>
-                <ArrowRight className="w-3 h-3 text-cyan-400" />
+                <div className="flex items-center gap-2">
+                  <GraduationCap className="w-4 h-4 text-[#606060] group-hover:text-[#FF0000] transition-colors" />
+                  <span>Student</span>
+                </div>
+                <ArrowRight className="w-3.5 h-3.5 text-[#909090] group-hover:text-[#0F0F0F] transition-transform group-hover:translate-x-0.5" />
               </Link>
               <Link
                 to="/register/teacher"
-                className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 transition-colors text-center"
+                className="group flex items-center justify-between px-3.5 py-2.5 rounded-lg bg-[#F9F9F9] hover:bg-[#F2F2F2] border border-[#E5E5E5] text-[#0F0F0F] text-xs font-medium transition-colors"
               >
-                <span>Create Teacher Account</span>
-                <ArrowRight className="w-3 h-3 text-indigo-400" />
+                <div className="flex items-center gap-2">
+                  <School className="w-4 h-4 text-[#606060] group-hover:text-[#FF0000] transition-colors" />
+                  <span>Teacher</span>
+                </div>
+                <ArrowRight className="w-3.5 h-3.5 text-[#909090] group-hover:text-[#0F0F0F] transition-transform group-hover:translate-x-0.5" />
               </Link>
             </div>
           </div>
@@ -143,3 +146,4 @@ export default function Login() {
     </div>
   );
 }
+

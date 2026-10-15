@@ -82,6 +82,7 @@ async def start_adaptive_quiz(
 
 
 @router.get("/{quiz_session_id}/question", response_model=CurrentQuestionResponse)
+@router.get("/{quiz_session_id}/next-question", response_model=CurrentQuestionResponse)
 async def get_current_quiz_question(
     quiz_session_id: str,
     current_student: dict = Depends(require_role(["student", "teacher"]))
@@ -108,6 +109,41 @@ async def get_current_quiz_question(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to retrieve current question: {str(err)}"
         )
+
+
+@router.get("/{quiz_session_id}/state")
+async def get_quiz_session_state(
+    quiz_session_id: str,
+    current_student: dict = Depends(require_role(["student", "teacher"]))
+):
+    """
+    QUIZ SESSION STATE ENDPOINT:
+    Returns the secure backend-maintained session state (progress, score, concept mastery).
+    """
+    from app.repositories.quiz_session_repository import QuizSessionRepository
+    from app.services.student_state_service import StudentConceptStateService
+
+    clean_student = current_student["identifier"].strip().upper()
+    session = await QuizSessionRepository.get_session(quiz_session_id, clean_student)
+    if not session:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Quiz session not found or unauthorized.")
+
+    course_id = session.get("course_id", "")
+    concept_states = await StudentConceptStateService.sync_and_get_all_concept_states(
+        student_id=clean_student,
+        course_id=course_id
+    )
+
+    return {
+        "quiz_session_id": quiz_session_id,
+        "student_id": clean_student,
+        "course_id": course_id,
+        "status": session.get("status", "active"),
+        "answered_questions": session.get("answered_questions", 0),
+        "total_questions": session.get("total_questions", 0),
+        "current_score": session.get("score", 0.0),
+        "concept_states": concept_states.model_dump()
+    }
 
 
 @router.post("/{quiz_session_id}/answer", response_model=SubmitAnswerResponse)

@@ -204,3 +204,55 @@ async def test_submit_full_adaptive_quiz_authorization_failure():
                 submission=submission
             )
 
+
+@pytest.mark.asyncio
+async def test_two_courses_same_name_different_ids(sample_concept_features):
+    """
+    Verify two courses with identical CourseName ("Machine Learning")
+    are strictly isolated by unique course_id.
+    """
+    student_id = "S1001"
+    course_id_1 = str(ObjectId())
+    course_id_2 = str(ObjectId())
+    assert course_id_1 != course_id_2
+
+    captured_course_ids = []
+
+    async def mock_get_features(s_id, c_id):
+        captured_course_ids.append(c_id)
+        return sample_concept_features
+
+    async def mock_get_questions(course_id, concept_id, difficulty, count, excluded_ids):
+        concept_name = concept_id.split(":")[1]
+        return generate_mock_questions(count, concept_name)
+
+    with patch.object(FeatureServiceAdapter, "get_concept_features", side_effect=mock_get_features), \
+         patch("app.services.adapters.ml_inference_service.ml_service.predict", side_effect=get_mock_prediction), \
+         patch.object(QuestionBankAdapter, "get_questions", side_effect=mock_get_questions), \
+         patch.object(QuizSessionRepository, "create_session", side_effect=lambda doc: doc):
+
+        res1 = await AdaptiveQuizService.generate_full_adaptive_quiz(student_id, course_id_1, "Machine Learning")
+        res2 = await AdaptiveQuizService.generate_full_adaptive_quiz(student_id, course_id_2, "Machine Learning")
+
+        assert res1.course_id == course_id_1
+        assert res2.course_id == course_id_2
+        assert res1.quiz_session_id != res2.quiz_session_id
+        assert captured_course_ids == [course_id_1, course_id_2]
+
+
+@pytest.mark.asyncio
+async def test_no_available_questions_raises_error(sample_concept_features):
+    """
+    Verify that if the question bank returns 0 questions, a clean ValueError is raised.
+    """
+    student_id = "S1001"
+    course_id = str(ObjectId())
+
+    with patch.object(FeatureServiceAdapter, "get_concept_features", return_value=sample_concept_features), \
+         patch("app.services.adapters.ml_inference_service.ml_service.predict", side_effect=get_mock_prediction), \
+         patch.object(QuestionBankAdapter, "get_questions", return_value=[]):
+
+        with pytest.raises(ValueError, match="No questions are currently available"):
+            await AdaptiveQuizService.generate_full_adaptive_quiz(student_id, course_id, "Test Course")
+
+

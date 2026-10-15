@@ -18,51 +18,31 @@ const datasetConfig = [
     id: 'interactions',
     title: 'Interaction Telemetry',
     description: 'Raw dataset of student video interactions (Play, Pause, Seek, Speed Changes).',
-    icon: MousePointer2,
-    color: 'text-blue-400',
-    bg: 'bg-blue-950/80',
-    border: 'border-blue-800/60',
-    hover: 'hover:border-blue-500/50'
+    icon: MousePointer2
   },
   {
     id: 'transcripts',
     title: 'Course Transcripts',
-    description: 'NLP-generated transcripts from Faster-Whisper, mapped to timestamps.',
-    icon: FileText,
-    color: 'text-emerald-400',
-    bg: 'bg-emerald-950/80',
-    border: 'border-emerald-800/60',
-    hover: 'hover:border-emerald-500/50'
+    description: 'NLP-generated transcripts from Faster-Whisper, mapped to precise timestamps.',
+    icon: FileText
   },
   {
     id: 'concepts',
     title: 'Concept Segments',
     description: 'Educational concepts automatically extracted from transcripts.',
-    icon: BrainCircuit,
-    color: 'text-purple-400',
-    bg: 'bg-purple-950/80',
-    border: 'border-purple-800/60',
-    hover: 'hover:border-purple-500/50'
+    icon: BrainCircuit
   },
   {
     id: 'mappings',
     title: 'Concept-Event Mappings',
     description: 'Phase 7 intersection mapping raw telemetry to specific concepts.',
-    icon: LinkIcon,
-    color: 'text-amber-400',
-    bg: 'bg-amber-950/80',
-    border: 'border-amber-800/60',
-    hover: 'hover:border-amber-500/50'
+    icon: LinkIcon
   },
   {
     id: 'difficulty',
     title: 'Difficulty Dataset',
     description: 'Phase 8 deterministic difficulty scores based strictly on real interaction data.',
-    icon: BarChart,
-    color: 'text-rose-400',
-    bg: 'bg-rose-950/80',
-    border: 'border-rose-800/60',
-    hover: 'hover:border-rose-500/50'
+    icon: BarChart
   }
 ];
 
@@ -113,10 +93,22 @@ export default function TeacherDatasetManagement() {
       const a = document.createElement('a');
       a.style.display = 'none';
       a.href = url;
-      a.download = `cognitrace_${datasetId}_dataset.${format}`;
+
+      const disposition = res.headers.get('content-disposition');
+      let filename = `cognitrace_${datasetId}_dataset.${format}`;
+      if (disposition && disposition.indexOf('attachment') !== -1) {
+        const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+        const matches = filenameRegex.exec(disposition);
+        if (matches != null && matches[1]) {
+          filename = matches[1].replace(/['"]/g, '');
+        }
+      }
+
+      a.download = filename;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
+      a.remove();
     } catch (err) {
       alert(err.message);
     } finally {
@@ -125,78 +117,78 @@ export default function TeacherDatasetManagement() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 pb-12">
+    <div className="min-h-screen bg-[#F9F9F9] text-[#0F0F0F] flex flex-col pb-12">
       {/* Header */}
-      <header className="border-b border-slate-800 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <header className="border-b border-[#E5E5E5] bg-[#FFFFFF] sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Link to="/teacher/dashboard" className="p-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white transition-colors border border-slate-800">
-              <ArrowLeft className="w-4 h-4" />
+            <Link to="/teacher/dashboard" className="yt-btn-secondary p-2 flex items-center justify-center">
+              <ArrowLeft className="w-4 h-4 text-[#0F0F0F]" />
             </Link>
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-purple-500/20">
-                <Database className="w-5 h-5 text-white" />
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-full bg-[#FF0000]/10 flex items-center justify-center text-[#FF0000]">
+                <Database className="w-4 h-4" />
               </div>
               <div>
-                <h1 className="font-bold text-base text-slate-100">Dataset Management</h1>
-                <p className="text-xs text-slate-400">View and Export CogniTrace Datasets</p>
+                <h1 className="font-bold text-sm text-[#0F0F0F]">Dataset Management</h1>
+                <p className="text-xs text-[#606060]">View and Export CogniTrace Datasets</p>
               </div>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 space-y-8">
+      <main className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 mt-6 space-y-6">
         
         {error && (
-          <div className="p-4 bg-red-950/50 border border-red-900 rounded-xl text-red-200 text-sm">
+          <div className="p-3.5 bg-[#FFEBEE] border border-[#FFCDD2] rounded-xl text-[#C62828] text-xs">
             {error}
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {datasetConfig.map(ds => {
             const Icon = ds.icon;
             const count = summary ? summary[ds.id] : 0;
             
             return (
-              <div key={ds.id} className={`glass-card p-6 rounded-2xl flex flex-col border border-slate-800 ${ds.hover} transition-all`}>
-                <div className="flex items-start justify-between mb-4">
-                  <div className={`w-12 h-12 rounded-xl ${ds.bg} ${ds.border} border flex items-center justify-center ${ds.color}`}>
-                    <Icon className="w-6 h-6" />
+              <div key={ds.id} className="bg-[#FFFFFF] border border-[#E5E5E5] p-5 rounded-xl flex flex-col justify-between shadow-xs hover:border-[#CCCCCC] hover:shadow-sm transition-all">
+                <div>
+                  <div className="flex items-start justify-between mb-3.5">
+                    <div className="w-10 h-10 rounded-full bg-[#F2F2F2] flex items-center justify-center text-[#0F0F0F]">
+                      <Icon className="w-5 h-5" />
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[11px] text-[#606060] font-semibold uppercase tracking-wider">Total Records</p>
+                      {loading ? (
+                        <Loader2 className="w-4 h-4 animate-spin text-[#909090] ml-auto mt-1" />
+                      ) : (
+                        <p className="text-xl font-bold text-[#0F0F0F] font-mono mt-0.5">{count.toLocaleString()}</p>
+                      )}
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-xs text-slate-400 font-medium">Total Records</p>
-                    {loading ? (
-                      <Loader2 className="w-5 h-5 animate-spin text-slate-600 ml-auto mt-1" />
-                    ) : (
-                      <p className={`text-2xl font-bold ${ds.color} font-mono`}>{count.toLocaleString()}</p>
-                    )}
-                  </div>
+                  
+                  <h3 className="text-base font-bold text-[#0F0F0F] mb-1">{ds.title}</h3>
+                  <p className="text-xs text-[#606060] leading-relaxed">{ds.description}</p>
                 </div>
                 
-                <h3 className="text-lg font-bold text-white mb-1">{ds.title}</h3>
-                <p className="text-xs text-slate-400 flex-1">{ds.description}</p>
-                
-                <div className="mt-6 pt-4 border-t border-slate-800/80 flex items-center justify-between gap-3">
+                <div className="mt-5 pt-3.5 border-t border-[#E5E5E5] flex items-center justify-between gap-2.5">
                   <button
                     onClick={() => navigate(`/teacher/datasets/${ds.id}`)}
-                    className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 text-xs font-semibold transition-colors"
+                    className="flex-1 yt-btn-secondary py-2 px-3 text-xs font-semibold flex items-center justify-center gap-1.5"
                   >
-                    <Eye className="w-4 h-4" />
-                    View Data
+                    <Eye className="w-3.5 h-3.5 text-[#606060]" />
+                    <span>View Data</span>
                   </button>
                   <button
                     onClick={() => handleGlobalExport(ds.id, 'csv')}
                     disabled={exporting === ds.id || count === 0}
-                    className={`inline-flex items-center justify-center p-2 rounded-xl border text-xs font-semibold transition-colors ${
-                      exporting === ds.id || count === 0
-                        ? 'bg-slate-900 border-slate-800 text-slate-600 cursor-not-allowed'
-                        : `bg-slate-900 hover:${ds.bg} border-slate-700 hover:${ds.border} text-slate-300 hover:${ds.color}`
+                    className={`yt-btn-primary p-2 text-xs font-semibold flex items-center justify-center ${
+                      exporting === ds.id || count === 0 ? 'opacity-40 cursor-not-allowed' : ''
                     }`}
                     title="Export as CSV"
                   >
-                    {exporting === ds.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                    {exporting === ds.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
                   </button>
                 </div>
               </div>

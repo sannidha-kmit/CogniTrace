@@ -88,6 +88,23 @@ async def init_db_indexes():
         await database.quiz_sessions.create_index("status")
         await database.quiz_sessions.create_index([("created_at", -1)])
 
+        # Evidence-Aware Concept Modeling & Research indexes
+        await database.concept_evidence.create_index([("student_id", 1), ("course_id", 1)])
+        await database.concept_evidence.create_index([("course_id", 1), ("concept_id", 1)])
+        await database.concept_evidence.create_index("event_time")
+        await database.concept_evidence.create_index([("created_at", -1)])
+
+        await database.student_concept_state.create_index(
+            [("student_id", 1), ("course_id", 1), ("concept_id", 1)],
+            unique=True
+        )
+        await database.student_concept_state.create_index([("student_id", 1), ("course_id", 1)])
+        await database.student_concept_state.create_index("research_priority_score")
+
+        await database.question_validation.create_index([("course_id", 1), ("concept_id", 1)])
+        await database.question_validation.create_index("question_hash")
+        await database.question_validation.create_index("status")
+
         logger.info("Successfully initialized database unique indexes on all collections.")
     except Exception as err:
         logger.error("Failed to initialize database indexes: %s", err)

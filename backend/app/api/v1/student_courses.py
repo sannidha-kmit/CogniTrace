@@ -204,6 +204,44 @@ async def get_course_details_for_student(
     )
 
 
+@router.get("/courses/{course_id}/concepts")
+async def get_course_concepts_for_student(
+    course_id: str,
+    current_student: dict = Depends(require_role(["student"]))
+):
+    """
+    Retrieve extracted concepts for a course to allow timestamp-to-concept distraction mapping.
+    """
+    if not ObjectId.is_valid(course_id):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid course ID format."
+        )
+
+    database = await get_database()
+    course = await database.courses.find_one({"_id": ObjectId(course_id)})
+    if not course:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Course not found."
+        )
+
+    if course["year"] != current_student["year"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied."
+        )
+
+    concept_doc = await database.concept_segments.find_one({"course_id": course_id})
+    if not concept_doc or concept_doc.get("status") != "COMPLETED":
+        return {"concepts": []}
+
+    return {
+        "course_id": course_id,
+        "concepts": concept_doc.get("segments", [])
+    }
+
+
 @router.get("/courses/{course_id}/adaptive-quiz", response_model=AdaptiveQuizResponse)
 async def get_adaptive_quiz(
     course_id: str,

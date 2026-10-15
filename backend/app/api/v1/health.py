@@ -21,8 +21,9 @@ async def health_check():
         "environment": "development" if settings.DEBUG else "production",
         "database": db_status,
         "features": {
-            "authentication": "pending_phase",
-            "course_management": "pending_phase",
-            "telemetry_collection": "pending_phase"
+            "authentication": "active",
+            "course_management": "active",
+            "telemetry_collection": "active",
+            "adaptive_quiz": "active"
         }
     }

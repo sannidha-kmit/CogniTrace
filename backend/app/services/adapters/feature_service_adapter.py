@@ -1,16 +1,38 @@
+import re
 import logging
 from typing import List, Dict, Any, Optional
 from bson import ObjectId
 from app.db.mongodb import get_database
 from app.schemas.quiz import ConceptFeatureData
+from app.services.mapping_service import MappingService, parse_timestamp_to_seconds
 
 logger = logging.getLogger("cognitrace.quiz.feature_service")
 
 
+def normalize_pause_reason(reason: Any) -> Optional[str]:
+    """
+    Normalize pause reason to 'study' or 'other_work'.
+    Only 'study' maps to study_pause_count.
+    Only 'other_work' maps to other_work_pause_count.
+    Unknown / default / unrecognized pause reasons must NOT automatically be treated as study.
+    """
+    if not reason:
+        return None
+    r = str(reason).strip().lower()
+    if r == "study":
+        return "study"
+    if r == "other_work":
+        return "other_work"
+    return None
+
+
 class FeatureServiceAdapter:
     """
-    Member 5 Feature Service Adapter.
-    Consumes student telemetry & concept-wise interaction features without duplicating aggregation logic.
+    Feature Service Adapter.
+    Aggregates live student telemetry directly from MongoDB interaction_events into the
+    exact six concept-level features required by the finalized Adaptive Quiz ML model:
+    [backward_count, replay_count, study_pause_count, other_work_pause_count, forward_count, speed_increase_count]
+    No CSV files required at runtime.
     """
 
     @classmethod
@@ -20,84 +42,168 @@ class FeatureServiceAdapter:
         course_id: str
     ) -> List[ConceptFeatureData]:
         """
-        Retrieve concept-wise features for a given student and course.
-        Maps existing Phase 8 difficulty/interaction features into structured feature objects.
+        Retrieve concept-wise features for a given student and course from MongoDB.
+        Performs:
+        1. Retrieves course concepts from concept_segments.
+        2. Retrieves student's telemetry events from interaction_events.
+        3. Maps events to concepts by event timestamp.
+        4. Calculates the six ML features per concept.
         """
         database = await get_database()
         clean_student = student_id.strip().upper()
+        str_course_id = str(course_id)
 
-        logger.info("[MEMBER 5 ADAPTER] Fetching concept features for Student=%s, Course=%s", clean_student, course_id)
+        logger.info("[FEATURE ADAPTER] Aggregating concept features for Student=%s, Course=%s", clean_student, str_course_id)
 
-        # 1. First look up pre-aggregated Phase 8 difficulty collection
-        diff_cursor = database.difficulty.find({
-            "StudentID": clean_student,
-            "CourseID": str(course_id)
-        })
-        diff_records = await diff_cursor.to_list(length=500)
+        # 1. Retrieve course document
+        course_doc = None
+        if ObjectId.is_valid(str_course_id):
+            course_doc = await database.courses.find_one({"_id": ObjectId(str_course_id)})
+        if not course_doc:
+            course_doc = await database.courses.find_one({"_id": str_course_id})
 
-        concept_features_map: Dict[str, ConceptFeatureData] = {}
+        course_name = course_doc.get("course_name", "") if course_doc else ""
 
-        for rec in diff_records:
-            c_name = rec.get("Concept", "General")
-            c_id = f"{course_id}:{c_name}"
-            features = {
-                "replay_count": float(rec.get("ReplayCount", 0)),
-                "pause_count": float(rec.get("PauseCount", 0)),
-                "seek_backward_count": float(rec.get("SeekBackwardCount", 0)),
-                "seek_forward_count": float(rec.get("SeekForwardCount", 0)),
-                "understand_pause_count": float(rec.get("UnderstandPauseCount", 0)),
-                "difficulty_score": float(rec.get("DifficultyScore", 0.0))
-            }
-            concept_features_map[c_name] = ConceptFeatureData(
-                concept_id=c_id,
-                concept_name=c_name,
-                features=features
-            )
-
-        # 2. Discover all course concepts from concept_segments / questions if any concepts have 0 interactions
-        concept_doc = await database.concept_segments.find_one({"course_id": str(course_id)})
-        all_concepts: List[str] = []
-
-        if concept_doc and "segments" in concept_doc:
-            all_concepts = [s.get("Concept", "").strip() for s in concept_doc.get("segments", []) if s.get("Concept")]
-
-        # Also check distinct concepts in questions collection for this course
-        question_concepts = await database.questions.distinct("concept_name", {"course_id": str(course_id)})
-        for qc in question_concepts:
-            if qc and qc not in all_concepts:
-                all_concepts.append(qc)
-
-        # Populate neutral baseline features for concepts with no telemetry yet
-        for c_name in all_concepts:
-            if c_name not in concept_features_map:
-                c_id = f"{course_id}:{c_name}"
-                concept_features_map[c_name] = ConceptFeatureData(
-                    concept_id=c_id,
-                    concept_name=c_name,
-                    features={
-                        "replay_count": 0.0,
-                        "pause_count": 0.0,
-                        "seek_backward_count": 0.0,
-                        "seek_forward_count": 0.0,
-                        "understand_pause_count": 0.0,
-                        "difficulty_score": 0.0
-                    }
+        # 2. Retrieve concept segments (auto-extract if completed transcript exists)
+        concept_doc = await database.concept_segments.find_one({"course_id": str_course_id})
+        if not concept_doc or concept_doc.get("status") != "COMPLETED":
+            tx_doc = await database.course_transcripts.find_one({"course_id": str_course_id})
+            if tx_doc and tx_doc.get("status") == "COMPLETED" and tx_doc.get("segments"):
+                from app.services.concept_service import ConceptService
+                from datetime import datetime, timezone
+                subj = course_doc.get("subject", "") if course_doc else ""
+                cname = course_name or tx_doc.get("course_name", "")
+                t_id = course_doc.get("teacher_id", "") if course_doc else ""
+                t_name = course_doc.get("teacher_name", "") if course_doc else ""
+                extracted = ConceptService.extract_concepts_from_transcript(
+                    tx_doc["segments"],
+                    subject_name=subj,
+                    course_name=cname
                 )
+                if extracted:
+                    now = datetime.now(timezone.utc)
+                    await database.concept_segments.update_one(
+                        {"course_id": str_course_id},
+                        {
+                            "$set": {
+                                "course_id": str_course_id,
+                                "CourseSubject": subj,
+                                "CourseName": cname,
+                                "teacher_id": t_id,
+                                "teacher_name": t_name,
+                                "status": "COMPLETED",
+                                "segments": extracted,
+                                "error_message": None,
+                                "created_at": now,
+                                "updated_at": now
+                            }
+                        },
+                        upsert=True
+                    )
+                    concept_doc = await database.concept_segments.find_one({"course_id": str_course_id})
 
-        # Fallback if no concept segments exist in course at all: create generic concept
-        if not concept_features_map:
-            c_name = "Core Concepts"
-            concept_features_map[c_name] = ConceptFeatureData(
-                concept_id=f"{course_id}:{c_name}",
-                concept_name=c_name,
-                features={
-                    "replay_count": 0.0,
-                    "pause_count": 0.0,
-                    "seek_backward_count": 0.0,
-                    "seek_forward_count": 0.0,
-                    "understand_pause_count": 0.0,
-                    "difficulty_score": 0.0
-                }
+        concept_items = concept_doc.get("segments", []) if (concept_doc and concept_doc.get("status") == "COMPLETED") else []
+
+        # 3. Retrieve student interaction events from MongoDB
+        event_query: Dict[str, Any] = {
+            "StudentID": {"$regex": f"^{re.escape(clean_student)}$", "$options": "i"},
+            "$or": [
+                {"CourseID": str_course_id}
+            ]
+        }
+        if course_name:
+            event_query["$or"].append({"CourseName": course_name})
+
+        events_cursor = database.interaction_events.find(event_query).sort("created_at", 1)
+        events = await events_cursor.to_list(length=1000)
+
+        logger.info("[FEATURE ADAPTER] Found %d interaction events for Student=%s in Course=%s", len(events), clean_student, str_course_id)
+
+        # 4. Map events to concepts
+        concept_events_map: Dict[str, List[Dict[str, Any]]] = {}
+
+        # Initialize all known concepts
+        for item in concept_items:
+            c_name = item.get("Concept", "").strip()
+            if c_name and c_name not in concept_events_map:
+                concept_events_map[c_name] = []
+
+        # Also discover any distinct concepts from questions collection
+        question_concepts = await database.questions.distinct("concept_name", {"course_id": str_course_id})
+        for qc in question_concepts:
+            if qc and qc not in concept_events_map:
+                concept_events_map[qc] = []
+
+        # Map each event to its matching concept
+        for ev in events:
+            ts_str = str(ev.get("EventTimestamp", "00:00"))
+            ts_sec = parse_timestamp_to_seconds(ts_str)
+
+            if concept_items:
+                matched = MappingService.find_matching_concept_segment(concept_items, ts_sec)
+                c_name = matched.get("Concept", "Core Concepts")
+            else:
+                c_name = ev.get("Concept") or "Core Concepts"
+
+            if c_name not in concept_events_map:
+                concept_events_map[c_name] = []
+            concept_events_map[c_name].append(ev)
+
+        # Fallback if no concepts found at all
+        if not concept_events_map:
+            concept_events_map["Core Concepts"] = events
+
+        # 5. Aggregate the exact 6 features per concept
+        concept_features_list: List[ConceptFeatureData] = []
+
+        for c_name, ev_list in concept_events_map.items():
+            backward_count = 0.0
+            replay_count = 0.0
+            study_pause_count = 0.0
+            other_work_pause_count = 0.0
+            forward_count = 0.0
+            speed_increase_count = 0.0
+
+            for ev in ev_list:
+                e_type = str(ev.get("EventType", "")).upper()
+
+                if e_type == "SEEK_BACKWARD":
+                    backward_count += 1.0
+                elif e_type == "REPLAY":
+                    replay_count += 1.0
+                elif e_type == "PAUSE":
+                    norm_reason = normalize_pause_reason(ev.get("PauseReason"))
+                    if norm_reason == "study":
+                        study_pause_count += 1.0
+                    elif norm_reason == "other_work":
+                        other_work_pause_count += 1.0
+                elif e_type == "SEEK_FORWARD":
+                    forward_count += 1.0
+                elif e_type == "SPEED_CHANGE":
+                    speed_val = ev.get("PlaybackSpeed")
+                    try:
+                        if speed_val is not None and float(speed_val) > 1.0:
+                            speed_increase_count += 1.0
+                    except (ValueError, TypeError):
+                        pass
+
+            features_dict = {
+                "backward_count": backward_count,
+                "replay_count": replay_count,
+                "study_pause_count": study_pause_count,
+                "other_work_pause_count": other_work_pause_count,
+                "forward_count": forward_count,
+                "speed_increase_count": speed_increase_count
+            }
+
+            concept_id = f"{str_course_id}:{c_name}"
+            concept_features_list.append(
+                ConceptFeatureData(
+                    concept_id=concept_id,
+                    concept_name=c_name,
+                    features=features_dict
+                )
             )
 
-        return list(concept_features_map.values())
+        logger.info("[FEATURE ADAPTER] Computed 6 features for %d concepts for Student=%s", len(concept_features_list), clean_student)
+        return concept_features_list

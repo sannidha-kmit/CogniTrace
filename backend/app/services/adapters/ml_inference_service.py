@@ -22,35 +22,51 @@ class AdaptiveModelService:
     """
 
     def __init__(self, model_path: Optional[str] = None):
-        self.model_path = model_path or os.getenv("ML_MODEL_PATH", "data/adaptive_quiz_model.joblib")
+        self.model_path = model_path
         self.model = None
         self.feature_order = quiz_settings.FEATURE_ORDER
         self._load_model_safe()
 
     def _load_model_safe(self) -> None:
         """Attempt to load trained scikit-learn/joblib model if available on disk."""
-        if self.model_path and os.path.exists(self.model_path):
+        candidate_paths = [
+            self.model_path,
+            os.getenv("ML_MODEL_PATH"),
+            "models/adaptive_quiz_model.pkl",
+            "../models/adaptive_quiz_model.pkl",
+            "backend/models/adaptive_quiz_model.pkl",
+            "data/adaptive_quiz_model.joblib"
+        ]
+        chosen_path = next((p for p in candidate_paths if p and os.path.exists(p)), None)
+
+        if chosen_path:
             try:
                 import joblib
-                self.model = joblib.load(self.model_path)
-                logger.info("[MEMBER 1 ML SERVICE] Successfully loaded trained ML model from %s", self.model_path)
+                loaded = joblib.load(chosen_path)
+                if isinstance(loaded, dict) and "model" in loaded:
+                    self.model = loaded["model"]
+                    if "feature_names" in loaded:
+                        self.feature_order = loaded["feature_names"]
+                else:
+                    self.model = loaded
+                self.model_path = chosen_path
+                logger.info("[ADAPTIVE ML SERVICE] Successfully loaded production ML model from %s", chosen_path)
             except Exception as err:
                 logger.warning(
-                    "[MEMBER 1 ML SERVICE] Could not load model from %s: %s. Using deterministic fallback inference.",
-                    self.model_path, err
+                    "[ADAPTIVE ML SERVICE] Could not load model from %s: %s. Using deterministic fallback inference.",
+                    chosen_path, err
                 )
                 self.model = None
         else:
             logger.info(
-                "[MEMBER 1 ML SERVICE] Model file not found at '%s'. Using Member 1 deterministic inference engine.",
-                self.model_path
+                "[ADAPTIVE ML SERVICE] Model file not found. Using deterministic fallback inference engine."
             )
             self.model = None
 
     def validate_and_order_features(self, features: Dict[str, Any]) -> List[float]:
         """
-        Validate presence and data types of features and return as ordered array.
-        Prevents dictionary order non-determinism.
+        Validate presence and data types of the exact 6 features and return as ordered array:
+        [backward_count, replay_count, study_pause_count, other_work_pause_count, forward_count, speed_increase_count]
         """
         ordered_vector = []
         for feat_name in self.feature_order:
@@ -69,8 +85,8 @@ class AdaptiveModelService:
     def predict(self, features: Dict[str, Any]) -> ModelPrediction:
         """
         Inference interface for concept telemetry features.
-        Accepts feature dict, validates feature order, runs model or deterministic ML calculation,
-        and outputs priority + normalized score.
+        Accepts feature dict, validates feature order, runs production model or deterministic fallback calculation,
+        and outputs priority (HIGH/MEDIUM/LOW) + confidence score.
         """
         ordered_inputs = self.validate_and_order_features(features)
 
@@ -78,45 +94,62 @@ class AdaptiveModelService:
         if self.model is not None:
             try:
                 import numpy as np
-                input_array = np.array([ordered_inputs])
+                import pandas as pd
+                
+                df_input = pd.DataFrame([ordered_inputs], columns=self.feature_order)
+                raw_pred = self.model.predict(df_input)[0]
+                pred_label = str(raw_pred).upper().strip()
+
+                # Model confidence from predict_proba
+                confidence = 1.0
                 if hasattr(self.model, "predict_proba"):
-                    proba = self.model.predict_proba(input_array)[0]
-                    # Score is probability of needing practice / high difficulty
-                    score = float(proba[-1]) if len(proba) > 1 else float(proba[0])
-                else:
-                    raw_pred = self.model.predict(input_array)[0]
-                    score = float(raw_pred) if isinstance(raw_pred, (int, float)) else 0.5
+                    proba = self.model.predict_proba(df_input)[0]
+                    confidence = float(np.max(proba))
 
-                # Bound score to [0.0, 1.0]
-                score = max(0.0, min(1.0, score))
-                priority = self._map_score_to_priority(score)
-                return ModelPrediction(priority=priority, score=score, raw_output=score)
+                # Bound confidence to [0.0, 1.0]
+                confidence = max(0.0, min(1.0, confidence))
+
+                # Map directly to QuizPriorityEnum
+                try:
+                    priority = QuizPriorityEnum(pred_label)
+                except ValueError:
+                    priority = self._map_score_to_priority(confidence)
+
+                return ModelPrediction(
+                    priority=priority,
+                    score=confidence,
+                    raw_output={"prediction": pred_label, "confidence": confidence}
+                )
             except Exception as err:
-                logger.error("[MEMBER 1 ML SERVICE] Model prediction failed: %s. Falling back to heuristic.", err)
+                logger.error("[ADAPTIVE ML SERVICE] Model prediction failed: %s. Falling back to heuristic.", err)
 
-        # 2. Deterministic ML Inference engine (Member 1 baseline formula)
-        # Features: [replay_count, pause_count, seek_backward_count, seek_forward_count, understand_pause_count, difficulty_score]
-        replay = ordered_inputs[0]
-        pause = ordered_inputs[1]
-        seek_back = ordered_inputs[2]
-        seek_fwd = ordered_inputs[3]
-        understand_pause = ordered_inputs[4]
-        diff_score = ordered_inputs[5]
+        # 2. Deterministic ML Fallback Inference engine
+        # Features: [backward_count, replay_count, study_pause_count, other_work_pause_count, forward_count, speed_increase_count]
+        backward = ordered_inputs[0]
+        replay = ordered_inputs[1]
+        study_pause = ordered_inputs[2]
+        other_work_pause = ordered_inputs[3]
+        forward = ordered_inputs[4]
+        speed_increase = ordered_inputs[5]
 
-        # Calculate composite struggle / mastery score
+        # Forward_count and speed_increase_count must NOT be treated as difficulty.
+        # Backward, replay, and study-pause represent evidence of needing more revision.
         weighted_struggle = (
+            (backward * 2.0) +
             (replay * 2.0) +
-            (seek_back * 2.0) +
-            (understand_pause * 3.0) +
-            (diff_score * 1.5) +
-            (pause * 0.5)
+            (study_pause * 3.0)
         )
 
-        # Sigmoid normalization to 0.0 - 1.0 range (centered at 5.0 struggle)
         normalized_score = 1.0 / (1.0 + math.exp(-0.4 * (weighted_struggle - 5.0)))
         normalized_score = round(normalized_score, 4)
 
-        priority = self._map_score_to_priority(normalized_score)
+        if weighted_struggle >= 7.0:
+            priority = QuizPriorityEnum.HIGH
+        elif weighted_struggle >= 3.0:
+            priority = QuizPriorityEnum.MEDIUM
+        else:
+            priority = QuizPriorityEnum.LOW
+
         return ModelPrediction(
             priority=priority,
             score=normalized_score,

@@ -8,7 +8,8 @@ import {
   ExternalLink, 
   AlertCircle,
   Search,
-  Calendar
+  Calendar,
+  ChevronRight
 } from 'lucide-react';
 
 export default function TeacherStudentList() {
@@ -48,99 +49,102 @@ export default function TeacherStudentList() {
   );
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950">
-      {/* Navbar */}
-      <header className="border-b border-slate-800 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+    <div className="min-h-screen flex flex-col bg-[#F9F9F9] text-[#0F0F0F]">
+      {/* Header */}
+      <header className="border-b border-[#E5E5E5] bg-[#FFFFFF] sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <Link
             to="/teacher/dashboard"
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-cyan-400 transition-colors"
+            className="inline-flex items-center gap-2 text-sm font-medium text-[#606060] hover:text-[#0F0F0F] transition-colors"
           >
-            <ArrowLeft className="w-4 h-4" /> Back to Dashboard
+            <ArrowLeft className="w-4 h-4" /> Back to Studio Dashboard
           </Link>
-          <span className="text-xs font-mono text-cyan-400 px-3 py-1 rounded-full bg-cyan-950/60 border border-cyan-800/50">
+          <span className="text-xs font-semibold px-3 py-1 bg-[#F2F2F2] text-[#606060] rounded-full">
             Target Year: {user?.year}
           </span>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-8 space-y-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
         
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#E5E5E5]">
           <div>
-            <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2">
-              <Users className="w-6 h-6 text-cyan-400" /> Registered Students
-            </h2>
-            <p className="text-xs text-slate-400 mt-1">
-              Students registered for <strong className="text-white">{user?.year}</strong> sorted alphanumerically by Roll Number.
+            <h1 className="text-2xl font-bold text-[#0F0F0F] tracking-tight flex items-center gap-2.5">
+              <Users className="w-6 h-6 text-[#FF0000]" /> Student Roster
+            </h1>
+            <p className="text-sm text-[#606060] mt-0.5">
+              Students registered for <strong className="text-[#0F0F0F]">{user?.year}</strong> sorted alphanumerically by Roll Number.
             </p>
           </div>
 
           {/* Search filter */}
           <div className="relative max-w-xs w-full">
-            <Search className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
+            <Search className="w-4 h-4 text-[#909090] absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search Roll Number / Name..."
-              className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-900 border border-slate-800 text-white placeholder-slate-500 text-xs focus:outline-none focus:ring-2 focus:ring-cyan-500"
+              placeholder="Search Roll No or Name..."
+              className="w-full pl-10 pr-4 py-2 rounded-full bg-[#FFFFFF] border border-[#CCCCCC] text-[#0F0F0F] placeholder-[#909090] text-xs focus:outline-none focus:border-[#0F0F0F]"
             />
           </div>
         </div>
 
         {errorMessage && (
-          <div className="p-3 rounded-lg bg-rose-950/60 border border-rose-800/60 flex items-start gap-2.5 text-xs text-rose-300">
-            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+          <div className="p-3.5 rounded-xl bg-[#FFEBEE] border border-[#FFCDD2] flex items-start gap-2.5 text-xs text-[#C62828]">
+            <AlertCircle className="w-4 h-4 text-[#C62828] shrink-0 mt-0.5" />
             <span>{errorMessage}</span>
           </div>
         )}
 
         {loading ? (
-          <div className="py-16 text-center text-xs font-mono text-slate-500">Loading student directory...</div>
+          <div className="py-16 text-center text-sm text-[#606060]">Loading student roster...</div>
         ) : students.length === 0 ? (
-          <div className="py-16 text-center space-y-3 glass-panel rounded-2xl border border-slate-800">
-            <UserCheck className="w-12 h-12 text-slate-600 mx-auto" />
-            <p className="text-base font-semibold text-white">No students registered for this academic year yet.</p>
-            <p className="text-xs text-slate-400">When students register for {user?.year}, their accounts will automatically appear here.</p>
+          <div className="py-20 text-center space-y-3 bg-[#FFFFFF] border border-[#E5E5E5] rounded-xl max-w-lg mx-auto p-8 shadow-xs">
+            <div className="w-16 h-16 rounded-full bg-[#F2F2F2] flex items-center justify-center mx-auto text-[#909090]">
+              <UserCheck className="w-8 h-8" />
+            </div>
+            <h3 className="text-base font-bold text-[#0F0F0F]">No students registered yet</h3>
+            <p className="text-xs text-[#606060]">When students sign up for academic year {user?.year}, their interaction records will appear here.</p>
           </div>
         ) : (
-          <div className="glass-panel rounded-2xl border border-slate-800 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-slate-300">
-                <thead className="bg-slate-900/90 text-slate-400 font-mono uppercase text-[11px] border-b border-slate-800">
+          <div className="bg-[#FFFFFF] border border-[#E5E5E5] rounded-xl overflow-hidden shadow-xs">
+            <div className="overflow-x-auto custom-scrollbar">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-[#F9F9F9] text-[#606060] font-semibold uppercase text-xs border-b border-[#E5E5E5]">
                   <tr>
-                    <th className="py-3.5 px-6">Roll Number</th>
-                    <th className="py-3.5 px-6">Student Name</th>
-                    <th className="py-3.5 px-6">Academic Year</th>
-                    <th className="py-3.5 px-6 text-right">Dataset Module</th>
+                    <th className="py-3.5 px-5">Roll Number</th>
+                    <th className="py-3.5 px-5">Student Name</th>
+                    <th className="py-3.5 px-5">Academic Year</th>
+                    <th className="py-3.5 px-5 text-right">Analytics & Telemetry</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/80">
+                <tbody className="divide-y divide-[#E5E5E5]">
                   {filteredStudents.map((s) => (
-                    <tr key={s.id || s.roll_number} className="hover:bg-slate-900/50 transition-colors">
-                      <td className="p-4 font-mono font-bold text-cyan-400">
+                    <tr key={s.id || s.roll_number} className="hover:bg-[#F9F9F9] transition-colors">
+                      <td className="p-4 font-mono font-semibold text-[#0F0F0F]">
                         <Link 
                           to={`/teacher/students/${s.roll_number}`} 
-                          className="hover:underline flex items-center gap-1 text-cyan-400 hover:text-cyan-300"
+                          className="hover:text-[#FF0000] inline-flex items-center gap-1.5 transition-colors"
                         >
                           <span>{s.roll_number}</span>
-                          <ExternalLink className="w-3 h-3 text-slate-500" />
+                          <ExternalLink className="w-3.5 h-3.5 text-[#909090]" />
                         </Link>
                       </td>
-                      <td className="p-4 font-semibold text-white">{s.name}</td>
-                      <td className="p-4 font-mono text-slate-300">
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-900 text-slate-300 border border-slate-800 text-[11px]">
-                          <Calendar className="w-3 h-3 text-slate-500" /> {s.year}
+                      <td className="p-4 font-semibold text-[#0F0F0F]">{s.name}</td>
+                      <td className="p-4">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#F2F2F2] text-[#606060] text-xs font-medium">
+                          <Calendar className="w-3 h-3 text-[#909090]" /> {s.year}
                         </span>
                       </td>
-                      <td className="py-4 px-6 text-right font-mono text-[11px]">
+                      <td className="py-4 px-5 text-right">
                         <Link
                           to={`/teacher/students/${s.roll_number}`}
-                          className="text-slate-400 hover:text-cyan-400 transition-colors"
+                          className="yt-btn-secondary py-1.5 px-3.5 text-xs font-semibold inline-flex items-center gap-1.5"
                         >
-                          View Future Dataset Placeholder →
+                          <span>View Dataset Telemetry</span>
+                          <ChevronRight className="w-3.5 h-3.5 text-[#606060]" />
                         </Link>
                       </td>
                     </tr>

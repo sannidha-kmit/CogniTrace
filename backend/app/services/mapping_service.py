@@ -120,12 +120,15 @@ class MappingService:
         Propagates CourseID for unambiguous course identification.
         """
         clean_roll = roll_number.strip().upper()
+        import re
 
         # 1. Query REAL interaction telemetry events for student
         query = {
-            "StudentID": clean_roll,
-            "CourseSubject": teacher_subject,
-            "CourseName": {"$in": teacher_course_names}
+            "StudentID": {"$regex": f"^{re.escape(clean_roll)}$", "$options": "i"},
+            "$or": [
+                {"CourseName": {"$in": teacher_course_names}},
+                {"CourseSubject": teacher_subject}
+            ]
         }
         events_cursor = database.interaction_events.find(query).sort("created_at", 1)
         events = await events_cursor.to_list(length=1000)
@@ -153,14 +156,18 @@ class MappingService:
                 except Exception:
                     pass
             
-            if not course:
+            if not course and c_name:
+                pattern = re.sub(r'\s+', r'\\s*', re.escape(c_name))
                 course = await database.courses.find_one({
-                    "course_name": c_name,
-                    "subject": c_subject
+                    "course_name": {"$regex": f"^{pattern}$", "$options": "i"}
                 })
+                if not course:
+                    course = await database.courses.find_one({
+                        "course_name": {"$regex": re.escape(c_name), "$options": "i"}
+                    })
 
             if not course:
-                logger.warning("Course '%s' not found for event mapping", c_name)
+                logger.debug("Course '%s' not found for event mapping", c_name)
                 continue
 
             course_id_str = str(course["_id"])

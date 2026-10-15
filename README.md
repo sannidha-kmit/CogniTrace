@@ -1,16 +1,29 @@
-# CogniTrace Dataset Collection Platform
+# CogniTrace Intelligent Learning Analytics Platform
 
-A college-based learning interaction dataset collection platform designed to capture real-world student video-watching learning behaviors and interaction telemetry.
-
----
-
-## 1. Project Overview
-
-CogniTrace captures fine-grained, authentic student learning behaviors while students watch educational video content assigned by teachers. The platform focuses on high-fidelity dataset collection without artificial or synthetic telemetry, establishing the groundwork for future adaptive learning models.
+A comprehensive educational-video interaction analytics platform featuring **Evidence-Aware Concept-Level Student Modeling** and **Closed-Loop Adaptive Assessment**.
 
 ---
 
-## 2. Technology Stack
+## Research Contribution
+
+CogniTrace extends traditional count-based video telemetry with:
+1. **Interaction Reliability Weighting**: Distinguishes study pause (1.0), replay (0.9), seek backward (0.8) from distraction pauses (0.1) and forward skips (0.1).
+2. **Concept Mapping Confidence**: Calculates geometric and transcript-based confidence score $c \in [0.0, 1.0]$.
+3. **Temporal Decay Weighting**: Applies exponential decay $\exp(-\lambda \cdot \Delta t)$ to prioritize recent interactions.
+4. **Granular Evidence Auditing**: Persists intermediate audit trails in MongoDB collection `concept_evidence` for scientific reproducibility.
+5. **Authoritative Concept-Level Student State**: Tracks $(N, C, \text{Mastery}, \text{KnowledgeGap})$ for each `StudentID + CourseID + ConceptID`.
+6. **Closed-Loop Adaptive Assessment**: Dynamically recalculates student concept mastery upon answer submission to adapt next-question difficulty and concept priority.
+7. **Multi-Dimensional Question Validation**: Validates generated MCQs across structural, semantic, and quality dimensions before entry into quizzes.
+8. **Built-in Experimental & Ablation Presets**: Supports comparative benchmarking across Experiments A, B, C and Ablations A, B, C, D.
+
+---
+
+## Detailed Documentation
+
+- [RESEARCH_CONTRIBUTION.md](RESEARCH_CONTRIBUTION.md) — Mathematical formulations, evidence equations, and methodology.
+- [ARCHITECTURE.md](ARCHITECTURE.md) — System topology, component interactions, and data pipeline.
+- [API_DOCUMENTATION.md](API_DOCUMENTATION.md) — Complete REST endpoint reference and schemas.
+- [EXPERIMENT_CONFIGURATION.md](EXPERIMENT_CONFIGURATION.md) — Experimental presets, API configuration, and ablation studies.
 
 ### Frontend
 - **Framework**: React 18

@@ -55,6 +55,8 @@ class RevisionResource(BaseModel):
     timestamp_seconds: Optional[int] = None
     timestamp_display: Optional[str] = None
     revision_url: str
+    transcript_excerpt: Optional[str] = None
+
 
 
 class LearningSupport(BaseModel):
@@ -172,6 +174,34 @@ class QuizResultResponse(BaseModel):
 
 
 # ─────────────────────────────────────────────────────────────
+# Concept Map Models (Dynamic Quiz / Concept-Mapping)
+# ─────────────────────────────────────────────────────────────
+
+class ConceptMapNode(BaseModel):
+    """Single concept node in the concept map graph."""
+    concept_id: str
+    concept_name: str
+    priority: str  # HIGH / MEDIUM / LOW
+    priority_score: float = Field(0.0, ge=0.0, le=1.0)
+    difficulty_level: str = "Easy"  # Easy / Medium / Hard
+    difficulty_score: float = 0.0
+    question_count: int = 0
+    dynamically_generated: int = 0  # how many were freshly generated
+    prerequisite: Optional[str] = None
+    interaction_metrics: Optional[Dict[str, float]] = None  # replay, pause, seek counts
+
+
+class ConceptMapData(BaseModel):
+    """Full concept map returned alongside the adaptive quiz."""
+    nodes: List[ConceptMapNode] = Field(default_factory=list)
+    total_concepts: int = 0
+    high_priority_count: int = 0
+    medium_priority_count: int = 0
+    low_priority_count: int = 0
+    dynamically_generated_total: int = 0
+
+
+# ─────────────────────────────────────────────────────────────
 # Student-Facing Adaptive Quiz Assembly Models
 # ─────────────────────────────────────────────────────────────
 
@@ -181,6 +211,7 @@ class AdaptiveQuizQuestionItem(BaseModel):
     question: str
     options: List[str]
     concept: str
+    difficulty: str = "MEDIUM"
 
 
 class AdaptiveQuizResponse(BaseModel):
@@ -190,6 +221,7 @@ class AdaptiveQuizResponse(BaseModel):
     course_name: str
     total_questions: int
     questions: List[AdaptiveQuizQuestionItem]
+    concept_map: Optional[ConceptMapData] = None
 
 
 class BulkAnswerItem(BaseModel):
@@ -214,6 +246,12 @@ class QuestionResult(BaseModel):
     is_correct: bool
     concept: str
     explanation: Optional[str] = None
+    timestamp_seconds: Optional[int] = None
+    timestamp_display: Optional[str] = None
+    transcript_excerpt: Optional[str] = None
+    video_url: Optional[str] = None
+    revision_url: Optional[str] = None
+
 
 
 class ConceptPerformance(BaseModel):

@@ -258,7 +258,25 @@ async def export_paginated_dataset(
     else:
         fieldnames = []
 
-    return ExportService.get_export_response(data, fieldnames, dataset_type, format.lower())
+    # Determine student_id and course_name if dataset has single student/course
+    student_id = None
+    course_name = None
+    if data:
+        student_ids = set(d.get("StudentID") for d in data if d.get("StudentID"))
+        if len(student_ids) == 1:
+            student_id = list(student_ids)[0]
+        course_names = set(d.get("CourseName") for d in data if d.get("CourseName"))
+        if len(course_names) == 1:
+            course_name = list(course_names)[0]
+
+    filename = ExportService.build_safe_filename(
+        student_id=student_id,
+        course_name=course_name,
+        dataset_name=dataset_type,
+        format_type=format.lower()
+    )
+
+    return ExportService.get_export_response(data, fieldnames, filename, format.lower())
 
 
 @router.delete("/{dataset_type}/record/{record_id}")

@@ -1,11 +1,71 @@
 import csv
 import json
 import io
-from typing import List, Dict, Any
+import re
+from typing import List, Dict, Any, Optional
 from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
 
 class ExportService:
+    @staticmethod
+    def sanitize_filename_part(part: Optional[str]) -> str:
+        r"""
+        Sanitize a string for safe inclusion in a download filename:
+        - Replaces whitespace with underscores
+        - Strips any characters outside [a-zA-Z0-9_\-\.]
+        - Deduplicates underscores
+        """
+        if not part:
+            return ""
+        s = re.sub(r'\s+', '_', str(part).strip())
+        s = re.sub(r'[^a-zA-Z0-9_\-\.]', '', s)
+        s = re.sub(r'_+', '_', s)
+        return s.strip('_')
+
+    @classmethod
+    def build_safe_filename(
+        cls,
+        student_id: Optional[str] = None,
+        course_name: Optional[str] = None,
+        dataset_name: str = "Dataset",
+        format_type: str = "csv"
+    ) -> str:
+        """
+        Construct standard sanitized dataset filename:
+        Format: {StudentID}_{CourseName}_{DatasetName}.{ext}
+        or {StudentID}_{DatasetName}.{ext}
+        or {CourseName}_{DatasetName}.{ext}
+        """
+        NAME_MAP = {
+            "interaction_telemetry": "Interaction_Telemetry",
+            "interactions": "Interaction_Telemetry",
+            "telemetry": "Interaction_Telemetry",
+            "concept_event_mapping": "Concept_Event_Mapping",
+            "concept-mappings": "Concept_Event_Mapping",
+            "mappings": "Concept_Event_Mapping",
+            "mapping": "Concept_Event_Mapping",
+            "difficulty": "Difficulty",
+            "transcripts": "Course_Transcripts",
+            "course_transcripts": "Course_Transcripts",
+            "concepts": "Concept_Segments",
+            "concept_segments": "Concept_Segments"
+        }
+        clean_ds = NAME_MAP.get(dataset_name.strip().lower(), cls.sanitize_filename_part(dataset_name) or "Dataset")
+        parts = []
+        if student_id:
+            s_id = cls.sanitize_filename_part(student_id)
+            if s_id:
+                parts.append(s_id)
+        if course_name:
+            c_name = cls.sanitize_filename_part(course_name)
+            if c_name:
+                parts.append(c_name)
+        parts.append(clean_ds)
+
+        base_name = "_".join(parts) if parts else "CogniTrace_Dataset"
+        ext = format_type.lower().strip('.')
+        return f"{base_name}.{ext}"
+
     @staticmethod
     def generate_csv(data: List[Dict[str, Any]], fieldnames: List[str]) -> bytes:
         """
@@ -86,24 +146,27 @@ class ExportService:
     @classmethod
     def get_export_response(cls, data_list: list, fieldnames: list, filename: str, format_type: str):
         from fastapi import Response, HTTPException
-        if format_type == "csv":
+        fmt = format_type.lower().strip('.')
+        if fmt == "csv":
             content = cls.generate_csv(data_list, fieldnames)
             media_type = "text/csv"
-            filename = f"{filename}.csv"
-        elif format_type == "json":
+        elif fmt == "json":
             content = cls.generate_json(data_list, fieldnames)
             media_type = "application/json"
-            filename = f"{filename}.json"
-        elif format_type == "xlsx":
+        elif fmt == "xlsx":
             content = cls.generate_excel(data_list, fieldnames)
             media_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            filename = f"{filename}.xlsx"
         else:
             raise HTTPException(status_code=400, detail="Unsupported export format.")
-            
+
+        full_filename = filename if filename.endswith(f".{fmt}") else f"{filename}.{fmt}"
+
         return Response(
             content=content,
             media_type=media_type,
-            headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+            headers={
+                "Content-Disposition": f'attachment; filename="{full_filename}"',
+                "Access-Control-Expose-Headers": "Content-Disposition"
+            }
         )
 

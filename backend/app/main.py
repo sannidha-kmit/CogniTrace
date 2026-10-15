@@ -147,6 +147,28 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
 # Register API Router
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
+# Static files for Attention Monitoring & Lecture UI
+import pathlib
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
+_STATIC_DIR = pathlib.Path(__file__).parent / "static"
+if _STATIC_DIR.exists():
+    app.mount("/static", StaticFiles(directory=str(_STATIC_DIR)), name="static")
+
+
+@app.get("/lecture")
+@app.get("/monitor")
+async def lecture_ui():
+    """Serve the Real-Time Privacy-Preserving Attention & Video Lecture UI."""
+    lecture_file = _STATIC_DIR / "lecture-player.html"
+    if lecture_file.exists():
+        return FileResponse(str(lecture_file))
+    return JSONResponse(
+        status_code=404,
+        content={"message": "Lecture player interface file not found."}
+    )
+
 
 @app.get("/")
 async def root():
@@ -154,5 +176,7 @@ async def root():
     return {
         "message": "Welcome to CogniTrace Dataset Collection Platform API Foundation",
         "health_check": f"{settings.API_V1_STR}/health",
+        "lecture_portal": "/lecture",
         "documentation": "/docs"
     }
+

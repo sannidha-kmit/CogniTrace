@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CogniTrace — Video Lecture & Attention Assistance</title>
+  <link rel="stylesheet" href="/static/attention.css">
+</head>
+<body>
+
+  <!-- Top Navbar -->
+  <header class="cogni-navbar">
+    <div class="brand-badge">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 14.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1 1 0 0 1-2 0V7a1 1 0 0 1 2 0z"/>
+      </svg>
+      CogniTrace Learning Portal
+    </div>
+    <div class="header-meta">
+      <button class="privacy-pill-btn open-privacy-modal" id="open-privacy-top-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+        Privacy & How It Works
+      </button>
+      <span id="user-display">Student Portal (Year 3)</span>
+    </div>
+  </header>
+
+  <!-- Main Content Layout -->
+  <main class="lecture-container">
+    
+    <!-- Left Column: Video Lecture Player -->
+    <section class="video-wrapper">
+      <div class="video-frame-container" id="player-container">
+        <!-- Interactive Video Player -->
+        <iframe 
+          id="lecture-iframe"
+          src="https://www.youtube.com/embed/kqtD5dpn9C8?enablejsapi=1" 
+          title="Educational Video Lecture" 
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+          allowfullscreen>
+        </iframe>
+      </div>
+
+      <div class="video-info-bar">
+        <div>
+          <h1 class="course-title" id="course-name-header">Design & Analysis of Algorithms — Lecture 1</h1>
+          <p class="course-sub">Instructor: Prof. Priya &bull; Subject: DAA &bull; Academic Year: 3rd Year</p>
+        </div>
+        <button class="btn-secondary" id="open-settings-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+          Sensitivity Settings
+        </button>
+      </div>
+    </section>
+
+    <!-- Right Column: Student Attention Monitor Dashboard Widget -->
+    <aside class="attention-widget-card">
+      <div class="widget-header">
+        <span class="widget-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <circle cx="12" cy="12" r="4"></circle>
+          </svg>
+          Attention Monitor
+        </span>
+        <div id="attn-status-badge" class="status-badge status-focused">
+          <span class="status-dot"></span>
+          <span id="attn-status-text">FOCUSED</span>
+        </div>
+      </div>
+
+      <!-- Real-Time Metrics -->
+      <div class="metrics-grid">
+        <div class="metric-box">
+          <div class="metric-label">Distraction Score</div>
+          <div class="metric-val" id="attn-score-val">0</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">Deviation Time</div>
+          <div class="metric-val" id="attn-duration-val">0s</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">Surrounding Noise</div>
+          <div class="metric-val" id="attn-noise-val">OFF</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">Camera Feed</div>
+          <div class="metric-val" id="attn-cam-status" style="font-size: 0.95rem; color: #10B981;">ACTIVE</div>
+        </div>
+      </div>
+
+      <!-- Live Controls -->
+      <div class="toggle-row">
+        <span>Camera Attention Analysis</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="attn-camera-toggle" checked>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="toggle-row">
+        <span>Surrounding Noise Estimation</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="attn-mic-toggle">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="widget-actions">
+        <button class="btn-primary" id="attn-pause-btn">Pause Monitoring</button>
+        <button class="btn-secondary open-privacy-modal">Privacy & How It Works</button>
+      </div>
+
+      <!-- Derived Telemetry Log (Non-invasive numerical stream) -->
+      <div>
+        <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.35rem;">
+          DERIVED ATTENTION STREAM (ZERO VIDEO RECORDING)
+        </div>
+        <div class="telemetry-feed" id="telemetry-feed">
+          <div class="feed-item">
+            <span>[Init] System ready. Privacy protection active.</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- Consent Modal -->
+  <div class="modal-backdrop" id="consent-modal" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Attention Assistance</h3>
+      </div>
+      <div class="modal-body">
+        <p>Would you like CogniTrace to monitor your attention during this lecture?</p>
+        <p>We will use your camera only for real-time attention analysis. <strong>Camera frames will not be recorded or stored.</strong></p>
+        <p>Microphone monitoring is optional and will only be used to estimate surrounding noise.</p>
+        <p>You can disable monitoring at any time.</p>
+
+        <div class="consent-controls">
+          <div class="toggle-row">
+            <span>Camera Monitoring</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="consent-cam-toggle" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="toggle-row">
+            <span>Microphone Noise Monitoring</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="consent-mic-toggle">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" id="btn-consent-not-now">Not Now</button>
+        <button class="btn-primary" id="btn-consent-enable">Enable Attention Monitoring</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Privacy & How It Works Modal -->
+  <div class="modal-backdrop" id="privacy-modal" style="display: none;">
+    <div class="modal-card" style="max-width: 600px;">
+      <div class="modal-header">
+        <h3>Privacy & Learning Assistance Guarantee</h3>
+      </div>
+      <div class="modal-body">
+        <p><strong>100% Local & Privacy-Preserving Architecture:</strong></p>
+        <ul style="margin-left: 1.25rem; margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6;">
+          <li><strong>No Video Recording:</strong> Camera frames are converted to low-resolution grayscale in volatile browser memory, processed for head pose, and immediately discarded.</li>
+          <li><strong>No Server Uploads:</strong> Live camera video or frames are NEVER sent over the network or saved in databases.</li>
+          <li><strong>No Audio Recording:</strong> Microphone samples are used solely for real-time decibel/RMS volume calculation and instantly deleted. No speech transcription or voice identity is performed.</li>
+          <li><strong>No Facial Recognition:</strong> CogniTrace only checks whether a face is oriented toward the screen—we do not identify individual faces.</li>
+          <li><strong>Derived Analytics Only:</strong> Only numerical attention states (e.g. focused duration, distraction score) are used to provide gentle feedback.</li>
+          <li><strong>Complete User Control:</strong> You can pause or disable monitoring at any time.</li>
+        </ul>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-primary" id="close-privacy-btn">Understood</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sensitivity Settings Modal -->
+  <div class="modal-backdrop" id="settings-modal" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Attention Sensitivity Settings</h3>
+      </div>
+      <div class="modal-body">
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+          <div>
+            <label style="font-size: 0.85rem; color: var(--text-secondary); display: block; margin-bottom: 0.35rem;">
+              Head Yaw Threshold (Degrees):
+            </label>
+            <input type="number" id="set-yaw-thresh" value="24" min="10" max="60" style="width: 100%; padding: 0.5rem; background: var(--bg-input); border: 1px solid var(--bg-card-border); color: #fff; border-radius: var(--radius-sm);">
+          </div>
+          <div>
+            <label style="font-size: 0.85rem; color: var(--text-secondary); display: block; margin-bottom: 0.35rem;">
+              Head Pitch Threshold (Degrees):
+            </label>
+            <input type="number" id="set-pitch-thresh" value="18" min="10" max="45" style="width: 100%; padding: 0.5rem; background: var(--bg-input); border: 1px solid var(--bg-card-border); color: #fff; border-radius: var(--radius-sm);">
+          </div>
+          <div>
+            <label style="font-size: 0.85rem; color: var(--text-secondary); display: block; margin-bottom: 0.35rem;">
+              Distraction Trigger Duration (Seconds):
+            </label>
+            <input type="number" id="set-high-thresh" value="10" min="5" max="30" style="width: 100%; padding: 0.5rem; background: var(--bg-input); border: 1px solid var(--bg-card-border); color: #fff; border-radius: var(--radius-sm);">
+          </div>
+          <div>
+            <label style="font-size: 0.85rem; color: var(--text-secondary); display: block; margin-bottom: 0.35rem;">
+              Notification Cooldown (Seconds):
+            </label>
+            <input type="number" id="set-cooldown" value="45" min="15" max="180" style="width: 100%; padding: 0.5rem; background: var(--bg-input); border: 1px solid var(--bg-card-border); color: #fff; border-radius: var(--radius-sm);">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" id="close-settings-btn">Cancel</button>
+        <button class="btn-primary" id="save-settings-btn">Save Settings</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating Corner Camera Preview -->
+  <div class="corner-preview-card" id="corner-preview-box" style="display: none;">
+    <div class="corner-preview-header">
+      <span style="display: flex; items-center; gap: 0.35rem;">
+        <span class="status-dot" style="background: #10B981; width: 6px; height: 6px; margin-top: 3px;"></span>
+        Live Attention Feed
+      </span>
+      <button id="toggle-preview-btn" style="background:none;border:none;color:#94A3B8;cursor:pointer;font-size:12px;">&times;</button>
+    </div>
+    <canvas id="attn-corner-preview" width="160" height="120" class="corner-preview-canvas"></canvas>
+    <div class="corner-preview-footer">
+      <span>Score: <strong id="preview-score">0</strong></span>
+      <span>Yaw: <strong id="preview-yaw">0°</strong></span>
+    </div>
+  </div>
+
+  <!-- Toast Container for Gentle Alerts -->
+  <div class="toast-container" id="toast-container"></div>
+
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface@0.0.7/dist/blazeface.min.js"></script>
+  <script src="/static/attention-engine.js"></script>
+  <script src="/static/attention-ui.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Initialize CogniTrace Attention UI Controller
+      const ui = new CogniTraceAttentionUI({
+        courseId: 'demo_course_id',
+        getVideoTimestamp: () => {
+          const now = new Date();
+          return `${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+        }
+      });
+    });
+  </script>
+</body>
+</html>

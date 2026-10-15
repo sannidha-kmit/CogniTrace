@@ -71,12 +71,15 @@ class DifficultyService:
         Propagates CourseID for unambiguous course identification.
         """
         clean_roll = roll_number.strip().upper()
+        import re
 
         # 1. Fetch Phase 7 concept-event mappings
         mapping_query = {
-            "StudentID": clean_roll,
-            "CourseSubject": teacher_subject,
-            "CourseName": {"$in": teacher_course_names}
+            "StudentID": {"$regex": f"^{re.escape(clean_roll)}$", "$options": "i"},
+            "$or": [
+                {"CourseName": {"$in": teacher_course_names}},
+                {"CourseSubject": teacher_subject}
+            ]
         }
         mappings_cursor = database.concept_event_mappings.find(mapping_query)
         mappings = await mappings_cursor.to_list(length=5000)
